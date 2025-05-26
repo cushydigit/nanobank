@@ -1,0 +1,37 @@
+services:
+  auth-service:
+    image: auth-service
+    build:
+      context: ../
+      dockerfile: ./auth-service/Dockerfile
+    ports:
+      - 8081:8080
+    environment:
+      PORT: "8081"
+      JWT_TOKEN: "veryverysecretkey"
+      DNS: "postgres://user:password@postgres:5432/authdb?sslmode=disable&connect_timeout=5"
+    depends_on:
+      - postgres
+
+  postgres:
+    image: docker.arvancloud.ir/postgres:14.0
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - ../db-data/postgres/:/var/lib/postgresql/data/
+      - ../db/init-authdb.sql:/docker-entrypoint-initdb.d/init-authdb.sql
+    command: | 
+      bash -c "
+        docker-entrypoint.sh postgres &
+        until pg_isready -U user; do
+          echo 'Waiting for Postgres to be ready...'
+          sleep 2
+        done &&
+        psql -U user -tc \"SELECT 1 FROM pg_database WHERE datname = 'authdb';\" | grep -q 1 || psql -U user -c 'CREATE DATABASE authdb;' &&
+        echo 'Running scheme for authdb...' &&
+        psql -U user -d authdb -f /docker-entrypoint-initdb.d/init-authdb.sql &&
+        tail -f /dev/null
+      "
