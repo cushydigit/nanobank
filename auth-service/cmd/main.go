@@ -10,6 +10,7 @@ import (
 	"github.com/cushydigit/nanobank/auth-service/internal/handler"
 	"github.com/cushydigit/nanobank/auth-service/internal/repository"
 	"github.com/cushydigit/nanobank/shared/database"
+	"github.com/cushydigit/nanobank/shared/middlewares"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
@@ -44,7 +45,7 @@ func main() {
 	m.Use(middleware.Heartbeat("/ping"))
 
 	// int routes routes
-	m.Post("/register", h.Register)
+	m.With(middlewares.ValidateRegisterUserRequest).Post("/register", h.Register)
 	m.Post("/login", h.Login)
 	m.Post("/refresh", h.Refresh)
 

@@ -1,1 +1,30 @@
 package utils
+
+import (
+	"regexp"
+
+	"golang.org/x/crypto/bcrypt"
+)
+
+func HashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	return string(bytes), err
+}
+
+func CheckPasswordHash(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
+}
+
+// isValidEmail checks if the email has a valid format
+func IsValidEmail(email string) bool {
+	re := regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
+	return re.MatchString(email)
+}
+
+// isValidUsername allows alphanumerics and dots, with no leading/trailing/consecutive dots
+func IsValidUsername(username string) bool {
+	// Must start and end with letter or number, dots allowed in between
+	re := regexp.MustCompile(`^[a-zA-Z0-9]+(?:\.[a-zA-Z0-9]+)*$`)
+	return re.MatchString(username)
+}
