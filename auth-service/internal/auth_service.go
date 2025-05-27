@@ -34,3 +34,21 @@ func (s *AuthService) Register(username, email, password string) (*models.User, 
 	return newUser, nil
 
 }
+
+func (s *AuthService) Login(email, password string) (*models.User, error) {
+	user, err := s.repo.FindByEmail(email)
+	if err != nil {
+		return nil, errors.ErrInternalServer
+	}
+	if user == nil {
+		// user not found
+		return nil, errors.ErrInvalidCredentials
+	}
+	// check password
+	if ok := utils.CheckPasswordHash(password, user.Passowrd); !ok {
+		return nil, errors.ErrInvalidCredentials
+	}
+
+	return user, nil
+
+}

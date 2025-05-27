@@ -7,6 +7,7 @@ import (
 )
 
 type UserRepository interface {
+	// return err = nil if user is not found
 	FindByEmail(email string) (*models.User, error)
 	Create(user *models.User) error
 }
@@ -19,6 +20,7 @@ func NewPostgresUserRepository(db *sql.DB) *PostgresUserRepository {
 	return &PostgresUserRepository{DB: db}
 }
 
+// return nil err and user if user not found
 func (r *PostgresUserRepository) FindByEmail(email string) (*models.User, error) {
 	row := r.DB.QueryRow(
 		`SELECT id, username, email, password, created_at FROM users WHERE email = $1`,

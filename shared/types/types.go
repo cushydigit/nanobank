@@ -5,7 +5,7 @@ import (
 )
 
 type JWTClaims struct {
-	UserID   int    `json:"user_id"`
+	UserID   string `json:"user_id"`
 	Email    string `json:"email"`
 	Username string `json:"username"`
 	jwt.RegisteredClaims
@@ -22,6 +22,7 @@ type ContextKey string
 
 const (
 	RegisterReqKey ContextKey = "register_req"
+	AuthReqKey     ContextKey = "auth_req"
 	UserIDKey      ContextKey = "user_id"
 	UserEmailKey   ContextKey = "user_email"
 )

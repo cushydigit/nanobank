@@ -16,7 +16,7 @@ func ValidateRegisterUserRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var req types.RegisterReqBody
 		if err := helpers.ReadJSON(w, r, &req); err != nil {
-			helpers.ErrorJSON(w, errors.New("invalid request body"))
+			helpers.ErrorJSON(w, errors.New("invalid request"))
 			return
 		}
 
@@ -48,5 +48,18 @@ func ValidateRegisterUserRequest(next http.Handler) http.Handler {
 		ctx := context.WithValue(r.Context(), types.RegisterReqKey, req)
 		next.ServeHTTP(w, r.WithContext(ctx))
 
+	})
+}
+
+func ProvideAuthRequest(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var req types.AuthReqBody
+		if err := helpers.ReadJSON(w, r, &req); err != nil {
+			helpers.ErrorJSON(w, errors.New("invalid request"))
+			return
+		}
+		// inject validated request
+		ctx := context.WithValue(r.Context(), types.AuthReqKey, req)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

@@ -16,16 +16,17 @@ import (
 )
 
 var (
+	JWT_SECRET    = os.Getenv("JWT_SECRET")
 	PORT          = os.Getenv("PORT")
 	DNS           = os.Getenv("DNS")
-	ROOT_EMAIL    = os.Getenv("ROOT_USERNAME")
+	ROOT_EMAIL    = os.Getenv("ROOT_EMAIL")
 	ROOT_PASSWORD = os.Getenv("ROOT_PASSWORD")
 )
 
 func main() {
 
 	// check environment variables
-	if PORT == "" || DNS == "" || ROOT_EMAIL == "" || ROOT_PASSWORD == "" {
+	if PORT == "" || DNS == "" || ROOT_EMAIL == "" || ROOT_PASSWORD == "" || JWT_SECRET == "" {
 		log.Fatal("wrong environment variable")
 	}
 
