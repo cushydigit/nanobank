@@ -7,7 +7,7 @@ tidy-shared:
 tidy: tidy-shared tidy-auth
 
 up:
-	docker-compose -f ./deployments/docker-compose.yml up -d --build
+	COMPOSE_PROJECT_NAME=nanabank docker-compose -f ./deployments/docker-compose.yml up -d --build
 
 down:
 	docker-compose -f ./deployments/docker-compose.yml down
