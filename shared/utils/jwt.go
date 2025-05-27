@@ -2,10 +2,10 @@ package utils
 
 import (
 	"errors"
-	"log"
 	"os"
 	"time"
 
+	"github.com/cushydigit/nanobank/shared/config"
 	"github.com/cushydigit/nanobank/shared/models"
 	"github.com/cushydigit/nanobank/shared/types"
 	"github.com/golang-jwt/jwt/v5"
@@ -14,7 +14,6 @@ import (
 var secret = os.Getenv("JWT_SECRET")
 
 func GenerateTokens(user *models.User) (*types.JWTTokens, error) {
-	log.Printf("THE SECRET IS: %s", secret)
 	now := time.Now()
 
 	access := jwt.NewWithClaims(jwt.SigningMethodHS256, types.JWTClaims{
@@ -22,7 +21,7 @@ func GenerateTokens(user *models.User) (*types.JWTTokens, error) {
 		Email:    user.Email,
 		Username: user.Username,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(now.Add(time.Minute * 5)),
+			ExpiresAt: jwt.NewNumericDate(now.Add(config.TTL_ACCESS_TOKEN)),
 		},
 	})
 	accessToken, err := access.SignedString([]byte(secret))
@@ -34,7 +33,7 @@ func GenerateTokens(user *models.User) (*types.JWTTokens, error) {
 		Email:    user.Email,
 		Username: user.Username,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(now.Add(time.Minute * 15)),
+			ExpiresAt: jwt.NewNumericDate(now.Add(config.TTL_REFRESH_TOKEN)),
 		},
 	})
 	refreshToken, err := refresh.SignedString([]byte(secret))

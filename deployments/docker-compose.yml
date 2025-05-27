@@ -11,6 +11,9 @@ services:
       JWT_SECRET: "veryverysecretkey"
       API_URL_AUTH: "http://auth-service:8081"
       API_URL_REDIS: "redis:6379"
+    depends_on:
+      - redis
+      - postgres
 
   auth-service:
     image: auth-service
@@ -27,6 +30,7 @@ services:
       ROOT_PASSWORD: "password"
     depends_on:
       - postgres
+      - redis
 
   redis:
     image: docker.arvancloud.ir/redis:alpine
