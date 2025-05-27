@@ -10,6 +10,7 @@ services:
       PORT: "8080"
       JWT_SECRET: "veryverysecretkey"
       API_URL_AUTH: "http://auth-service:8081"
+      API_URL_REDIS: "redis:6379"
 
   auth-service:
     image: auth-service
@@ -26,6 +27,11 @@ services:
       ROOT_PASSWORD: "password"
     depends_on:
       - postgres
+
+  redis:
+    image: docker.arvancloud.ir/redis:alpine
+    ports:
+      - 6379:6379
 
   postgres:
     image: docker.arvancloud.ir/postgres:14.0
