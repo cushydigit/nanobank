@@ -33,9 +33,12 @@ func Routes() http.Handler {
 	}))
 
 	// routes
-	// auth service
-	r.Post("/login", utils.ProxyHandler(API_URL_AUTH))
-	r.Post("/register", utils.ProxyHandler(API_URL_AUTH))
+	r.Route("/api", func(r chi.Router) {
+		// auth service
+		r.Route("/auth", func(r chi.Router) {
+			r.Mount("/", http.StripPrefix("/api/auth", utils.ProxyHandler(API_URL_AUTH)))
+		})
+	})
 
 	return r
 

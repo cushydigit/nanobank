@@ -11,6 +11,11 @@ type JWTClaims struct {
 	jwt.RegisteredClaims
 }
 
+type JWTTokens struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+}
+
 type HeaderKey string
 
 const (
@@ -23,6 +28,7 @@ type ContextKey string
 const (
 	RegisterReqKey ContextKey = "register_req"
 	AuthReqKey     ContextKey = "auth_req"
+	RefreshReqKey  ContextKey = "refresh_req"
 	UserIDKey      ContextKey = "user_id"
 	UserEmailKey   ContextKey = "user_email"
 )
@@ -37,6 +43,10 @@ type RegisterReqBody struct {
 type AuthReqBody struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
+}
+
+type RefreshReqBody struct {
+	RefreshToken string `json:"refresh_token"`
 }
 
 // response

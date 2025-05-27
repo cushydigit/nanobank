@@ -13,12 +13,7 @@ import (
 
 var secret = os.Getenv("JWT_SECRET")
 
-type JWTTokens struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-}
-
-func GenerateTokens(user *models.User) (*JWTTokens, error) {
+func GenerateTokens(user *models.User) (*types.JWTTokens, error) {
 	log.Printf("THE SECRET IS: %s", secret)
 	now := time.Now()
 
@@ -46,13 +41,13 @@ func GenerateTokens(user *models.User) (*JWTTokens, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &JWTTokens{
+	return &types.JWTTokens{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	}, nil
 }
 
-func ValidateToken(tokenStr, secret string) (*types.JWTClaims, error) {
+func ValidateToken(tokenStr string) (*types.JWTClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenStr, &types.JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(secret), nil
 	})

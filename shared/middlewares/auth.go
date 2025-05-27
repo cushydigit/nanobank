@@ -63,3 +63,16 @@ func ProvideAuthRequest(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
+
+func ProvideRefreshRequest(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var req types.RefreshReqBody
+		if err := helpers.ReadJSON(w, r, &req); err != nil {
+			helpers.ErrorJSON(w, errors.New("invalid request"))
+			return
+		}
+		// inject validated request
+		ctx := context.WithValue(r.Context(), types.RefreshReqKey, req)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}

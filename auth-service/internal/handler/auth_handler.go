@@ -2,14 +2,12 @@ package handler
 
 import (
 	"errors"
-	"log"
 	"net/http"
 
-	service "github.com/cushydigit/nanobank/auth-service/internal"
+	"github.com/cushydigit/nanobank/auth-service/internal/service"
 	myerrors "github.com/cushydigit/nanobank/shared/errors"
 	"github.com/cushydigit/nanobank/shared/helpers"
 	"github.com/cushydigit/nanobank/shared/types"
-	"github.com/cushydigit/nanobank/shared/utils"
 )
 
 type AuthHandler struct {
@@ -23,7 +21,7 @@ func NewAuthHandler(s *service.AuthService) *AuthHandler {
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	req, ok := r.Context().Value(types.RegisterReqKey).(types.RegisterReqBody)
 	if !ok {
-		helpers.ErrorJSON(w, errors.New("request object not found in context"), http.StatusInternalServerError)
+		helpers.ErrorJSON(w, errors.New("object not found in context of request"), http.StatusInternalServerError)
 		return
 	}
 
@@ -48,24 +46,20 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	req, ok := r.Context().Value(types.AuthReqKey).(types.AuthReqBody)
 	if !ok {
-		helpers.ErrorJSON(w, errors.New("request object not found in context"), http.StatusInternalServerError)
+		helpers.ErrorJSON(w, errors.New("object not found in context of request"), http.StatusInternalServerError)
 		return
 	}
 
-	user, err := h.service.Login(req.Email, req.Password)
+	user, tokens, err := h.service.Login(req.Email, req.Password)
 	if err != nil {
-		if err == myerrors.ErrInternalServer {
+		switch err {
+		case myerrors.ErrInternalServer:
 			helpers.ErrorJSON(w, err, http.StatusInternalServerError)
 			return
+		default:
+			helpers.ErrorJSON(w, err, http.StatusUnauthorized)
+			return
 		}
-		helpers.ErrorJSON(w, err, http.StatusUnauthorized)
-	}
-
-	tokens, err := utils.GenerateTokens(user)
-	if err != nil {
-		log.Printf("error is: %v", err)
-		helpers.ErrorJSON(w, errors.New("could not generate tokens"), http.StatusInternalServerError)
-		return
 	}
 
 	payload := types.Response{
@@ -83,5 +77,34 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
+	req, ok := r.Context().Value(types.RefreshReqKey).(types.RefreshReqBody)
+	if !ok {
+		helpers.ErrorJSON(w, errors.New("object not found in context of request"), http.StatusInternalServerError)
+		return
+	}
+	user, tokens, err := h.service.Refresh(req.RefreshToken)
+	if err != nil {
+		switch err {
+		case myerrors.ErrInternalServer:
+			helpers.ErrorJSON(w, err, http.StatusInternalServerError)
+			return
+		default:
+			helpers.ErrorJSON(w, err, http.StatusUnauthorized)
+			return
+		}
+	}
+
+	payload := types.Response{
+		Error:   false,
+		Message: "refresh successfull",
+		Data: map[string]any{
+			"id":       user.ID,
+			"email":    user.Email,
+			"username": user.Username,
+			"tokens":   tokens,
+		},
+	}
+
+	helpers.WriteJSON(w, http.StatusOK, payload)
 
 }

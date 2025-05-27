@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"os"
 
-	service "github.com/cushydigit/nanobank/auth-service/internal"
 	"github.com/cushydigit/nanobank/auth-service/internal/handler"
 	"github.com/cushydigit/nanobank/auth-service/internal/repository"
+	"github.com/cushydigit/nanobank/auth-service/internal/service"
 	"github.com/cushydigit/nanobank/shared/database"
 	"github.com/cushydigit/nanobank/shared/middlewares"
 	"github.com/go-chi/chi/v5"
@@ -59,7 +59,7 @@ func main() {
 	// int routes routes
 	m.With(middlewares.ValidateRegisterUserRequest).Post("/register", h.Register)
 	m.With(middlewares.ProvideAuthRequest).Post("/login", h.Login)
-	m.Post("/refresh", h.Refresh)
+	m.With(middlewares.ProvideRefreshRequest).Post("/refresh", h.Refresh)
 
 	m.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello"))
