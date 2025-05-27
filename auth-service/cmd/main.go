@@ -16,14 +16,16 @@ import (
 )
 
 var (
-	PORT = os.Getenv("PORT")
-	DNS  = os.Getenv("DNS")
+	PORT          = os.Getenv("PORT")
+	DNS           = os.Getenv("DNS")
+	ROOT_EMAIL    = os.Getenv("ROOT_USERNAME")
+	ROOT_PASSWORD = os.Getenv("ROOT_PASSWORD")
 )
 
 func main() {
 
 	// check environment variables
-	if PORT == "" || DNS == "" {
+	if PORT == "" || DNS == "" || ROOT_EMAIL == "" || ROOT_PASSWORD == "" {
 		log.Fatal("wrong environment variable")
 	}
 
@@ -36,6 +38,15 @@ func main() {
 	s := service.NewAuthService(r)
 	// create handler
 	h := handler.NewAuthHandler(s)
+
+	// init the root user or admin that has all privilages
+	if admin, _ := r.FindByEmail(ROOT_EMAIL); admin == nil {
+		log.Printf("the root user is not exists try to register a new root")
+		if _, err := s.Register("admin", ROOT_EMAIL, ROOT_PASSWORD); err != nil {
+			log.Fatalf("failed to create root user: %v", err)
+		}
+	}
+
 	// create router mux
 	m := chi.NewRouter()
 
