@@ -22,7 +22,7 @@ func main() {
 		log.Fatal("wrong environment variable")
 	}
 
-	myredis.Init(context.Background(), API_URL_REDIS)
+	_ = myredis.MyRedisClientInit(context.Background(), API_URL_REDIS)
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", PORT),

@@ -9,21 +9,26 @@ import (
 	"github.com/cushydigit/nanobank/shared/types"
 )
 
+type AuthCacher interface {
+	SetAuth(ctx context.Context, userID string, tokens *types.JWTTokens) error
+	DelAuth(ctx context.Context, userID string) error
+}
+
 func authKey(userID string) string {
 	return fmt.Sprintf("refresh:%s", userID)
 }
 
-func SetAuth(ctx context.Context, userID string, tokens *types.JWTTokens) error {
+func (r *MyRedisClient) SetAuth(ctx context.Context, userID string, tokens *types.JWTTokens) error {
 	key := authKey(userID)
 	jsonData, err := json.Marshal(tokens)
 	if err != nil {
 		return err
 	}
 
-	return Client.Set(ctx, key, jsonData, config.TTL_REFRESH_TOKEN).Err()
+	return r.rds.Set(ctx, key, jsonData, config.TTL_REFRESH_TOKEN).Err()
 }
 
-func DelAuth(ctx context.Context, userID string) error {
+func (r *MyRedisClient) DelAuth(ctx context.Context, userID string) error {
 	key := authKey(userID)
-	return Client.Del(ctx, key).Err()
+	return r.rds.Del(ctx, key).Err()
 }

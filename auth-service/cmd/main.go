@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 	"github.com/cushydigit/nanobank/auth-service/internal/service"
 	"github.com/cushydigit/nanobank/shared/database"
 	"github.com/cushydigit/nanobank/shared/middlewares"
+	myredis "github.com/cushydigit/nanobank/shared/redis"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
@@ -21,14 +23,17 @@ var (
 	DNS           = os.Getenv("DNS")
 	ROOT_EMAIL    = os.Getenv("ROOT_EMAIL")
 	ROOT_PASSWORD = os.Getenv("ROOT_PASSWORD")
+	API_URL_REDIS = os.Getenv("API_URL_REDIS")
 )
 
 func main() {
 
 	// check environment variables
-	if PORT == "" || DNS == "" || ROOT_EMAIL == "" || ROOT_PASSWORD == "" || JWT_SECRET == "" {
+	if PORT == "" || DNS == "" || ROOT_EMAIL == "" || ROOT_PASSWORD == "" || JWT_SECRET == "" || API_URL_REDIS == "" {
 		log.Fatal("wrong environment variable")
 	}
+
+	c := myredis.MyRedisClientInit(context.Background(), API_URL_REDIS)
 
 	// connect DB
 	db := database.ConnectDB(DNS)
@@ -36,7 +41,7 @@ func main() {
 	// create repo
 	r := repository.NewPostgresUserRepository(db)
 	// create service
-	s := service.NewAuthService(r)
+	s := service.NewAuthService(r, c)
 	// create handler
 	h := handler.NewAuthHandler(s)
 

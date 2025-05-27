@@ -3,20 +3,38 @@ package redis
 import (
 	"context"
 	"log"
+	"sync"
 
 	rds "github.com/redis/go-redis/v9"
 )
 
-var Client *rds.Client
+var (
+	client *MyRedisClient
+	once   sync.Once
+)
 
-func Init(ctx context.Context, Addr string) {
-	Client = rds.NewClient(&rds.Options{
-		Addr:     Addr,
-		Password: "",
-		DB:       0,
+type MyRedisClient struct {
+	rds *rds.Client
+}
+
+func MyRedisClientInit(ctx context.Context, Addr string) *MyRedisClient {
+	once.Do(func() {
+		c := rds.NewClient(&rds.Options{
+			Addr:     Addr,
+			Password: "",
+			DB:       0,
+		})
+		client = &MyRedisClient{rds: c}
 	})
 
-	if err := Client.Ping(ctx).Err(); err != nil {
+	// check the connection
+	if err := client.rds.Ping(ctx).Err(); err != nil {
 		log.Fatalf("failed to connect to redis: %v", err)
 	}
+
+	return client
+}
+
+func GetInstance() *MyRedisClient {
+	return client
 }

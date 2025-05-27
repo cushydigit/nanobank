@@ -27,6 +27,7 @@ services:
       JWT_SECRET: "veryverysecretkey"
       DNS: "postgres://user:password@postgres:5432/authdb?sslmode=disable&connect_timeout=5"
       ROOT_EMAIL: "admin@nanobank.com"
+      API_URL_REDIS: "redis:6379"
       ROOT_PASSWORD: "password"
     depends_on:
       - postgres
