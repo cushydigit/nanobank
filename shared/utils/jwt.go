@@ -14,8 +14,8 @@ import (
 var secret = os.Getenv("JWT_SECRET")
 
 type JWTTokens struct {
-	AccessToken  string
-	RefreshToken string
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
 }
 
 func GenerateTokens(user *models.User) (*JWTTokens, error) {
@@ -30,7 +30,7 @@ func GenerateTokens(user *models.User) (*JWTTokens, error) {
 			ExpiresAt: jwt.NewNumericDate(now.Add(time.Minute * 5)),
 		},
 	})
-	accessToken, err := access.SignedString(secret)
+	accessToken, err := access.SignedString([]byte(secret))
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +42,7 @@ func GenerateTokens(user *models.User) (*JWTTokens, error) {
 			ExpiresAt: jwt.NewNumericDate(now.Add(time.Minute * 15)),
 		},
 	})
-	refreshToken, err := refresh.SignedString(secret)
+	refreshToken, err := refresh.SignedString([]byte(secret))
 	if err != nil {
 		return nil, err
 	}

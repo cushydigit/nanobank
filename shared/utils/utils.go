@@ -1,6 +1,9 @@
 package utils
 
 import (
+	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"regexp"
 
 	"golang.org/x/crypto/bcrypt"
@@ -27,4 +30,14 @@ func IsValidUsername(username string) bool {
 	// Must start and end with letter or number, dots allowed in between
 	re := regexp.MustCompile(`^[a-zA-Z0-9]+(?:\.[a-zA-Z0-9]+)*$`)
 	return re.MatchString(username)
+}
+
+func ProxyHandler(target string) http.HandlerFunc {
+	url, _ := url.Parse(target)
+	proxy := httputil.NewSingleHostReverseProxy(url)
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		r.Host = url.Host
+		proxy.ServeHTTP(w, r)
+	}
 }

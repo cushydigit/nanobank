@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"log"
 	"net/http"
 
 	service "github.com/cushydigit/nanobank/auth-service/internal"
@@ -62,6 +63,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	tokens, err := utils.GenerateTokens(user)
 	if err != nil {
+		log.Printf("error is: %v", err)
 		helpers.ErrorJSON(w, errors.New("could not generate tokens"), http.StatusInternalServerError)
 		return
 	}
@@ -70,11 +72,10 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		Error:   false,
 		Message: "login successfull",
 		Data: map[string]any{
-			"id":            user.ID,
-			"email":         user.Email,
-			"username":      user.Username,
-			"access_token":  tokens.AccessToken,
-			"refresh_token": tokens.RefreshToken,
+			"id":       user.ID,
+			"email":    user.Email,
+			"username": user.Username,
+			"tokens":   tokens,
 		},
 	}
 

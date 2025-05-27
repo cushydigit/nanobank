@@ -58,7 +58,7 @@ func main() {
 
 	// int routes routes
 	m.With(middlewares.ValidateRegisterUserRequest).Post("/register", h.Register)
-	m.Post("/login", h.Login)
+	m.With(middlewares.ProvideAuthRequest).Post("/login", h.Login)
 	m.Post("/refresh", h.Refresh)
 
 	m.Get("/", func(w http.ResponseWriter, r *http.Request) {
