@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/cushydigit/nanobank/shared/config"
 	myredis "github.com/cushydigit/nanobank/shared/redis"
 )
 
@@ -25,8 +26,12 @@ func main() {
 	_ = myredis.MyRedisClientInit(context.Background(), API_URL_REDIS)
 
 	srv := &http.Server{
-		Addr:    fmt.Sprintf(":%s", PORT),
-		Handler: Routes(),
+		Addr:              fmt.Sprintf(":%s", PORT),
+		Handler:           Routes(),
+		IdleTimeout:       config.TIMEOUT_GATEWAY_IDLE, // Keep-alive tcp
+		ReadTimeout:       config.TIMEOUT_GATEWAY_READ,
+		WriteTimeout:      config.TIMEOUT_GATEWAY_WRITE,
+		ReadHeaderTimeout: config.TIMEOUT_GATEWAY_READ_HEADER,
 	}
 
 	log.Printf("starting gateway service on: %s\n", PORT)

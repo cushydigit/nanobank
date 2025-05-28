@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 	"github.com/cushydigit/nanobank/auth-service/internal/repository"
 	"github.com/cushydigit/nanobank/auth-service/internal/service"
 	"github.com/cushydigit/nanobank/shared/database"
+	"github.com/cushydigit/nanobank/shared/helpers"
 	"github.com/cushydigit/nanobank/shared/middlewares"
 	myredis "github.com/cushydigit/nanobank/shared/redis"
 	"github.com/go-chi/chi/v5"
@@ -28,12 +30,14 @@ var (
 
 func main() {
 
+	ctx := context.Background()
+
 	// check environment variables
 	if PORT == "" || DNS == "" || ROOT_EMAIL == "" || ROOT_PASSWORD == "" || JWT_SECRET == "" || API_URL_REDIS == "" {
 		log.Fatal("wrong environment variable")
 	}
-
-	c := myredis.MyRedisClientInit(context.Background(), API_URL_REDIS)
+	// init redis (cacher) client
+	c := myredis.MyRedisClientInit(ctx, API_URL_REDIS)
 
 	// connect DB
 	db := database.ConnectDB(DNS)
@@ -48,7 +52,7 @@ func main() {
 	// init the root user or admin that has all privilages
 	if admin, _ := r.FindByEmail(ROOT_EMAIL); admin == nil {
 		log.Printf("the root user is not exists try to register a new root")
-		if _, err := s.Register("admin", ROOT_EMAIL, ROOT_PASSWORD); err != nil {
+		if _, err := s.Register(ctx, "admin", ROOT_EMAIL, ROOT_PASSWORD); err != nil {
 			log.Fatalf("failed to create root user: %v", err)
 		}
 	}
@@ -61,13 +65,19 @@ func main() {
 	m.Use(middleware.Recoverer)
 	m.Use(middleware.Heartbeat("/ping"))
 
-	// int routes routes
+	// setup routes
 	m.With(middlewares.ValidateRegisterUserRequest).Post("/register", h.Register)
 	m.With(middlewares.ProvideAuthRequest).Post("/login", h.Login)
 	m.With(middlewares.ProvideRefreshRequest).Post("/refresh", h.Refresh)
+	m.With(middlewares.ProvideRefreshRequest).Post("/logout", h.Logout)
 
-	m.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello"))
+	// not allowed and not found handlers
+	m.NotFound(func(w http.ResponseWriter, r *http.Request) {
+		helpers.ErrorJSON(w, errors.New("route not found"), http.StatusNotFound)
+	})
+
+	m.MethodNotAllowed(func(w http.ResponseWriter, r *http.Request) {
+		helpers.ErrorJSON(w, errors.New("method not allowed"), http.StatusMethodNotAllowed)
 	})
 
 	srv := http.Server{

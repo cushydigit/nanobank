@@ -1,8 +1,11 @@
 package main
 
 import (
-	"github.com/cushydigit/nanobank/shared/utils"
+	"errors"
 	"net/http"
+
+	"github.com/cushydigit/nanobank/shared/helpers"
+	"github.com/cushydigit/nanobank/shared/utils"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -10,14 +13,14 @@ import (
 )
 
 func Routes() http.Handler {
-	r := chi.NewRouter()
+	m := chi.NewRouter()
 
 	// Middlewares
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
+	m.Use(middleware.Logger)
+	m.Use(middleware.Recoverer)
 
 	// specify who is allowed to connect
-	r.Use(cors.Handler(cors.Options{
+	m.Use(cors.Handler(cors.Options{
 		AllowedOrigins: []string{
 			"http://localhost:5134",  // Dev frontend
 			"https://microstore.com", // Prod frontend
@@ -33,13 +36,22 @@ func Routes() http.Handler {
 	}))
 
 	// routes
-	r.Route("/api", func(r chi.Router) {
+	m.Route("/api", func(r chi.Router) {
 		// auth service
 		r.Route("/auth", func(r chi.Router) {
 			r.Mount("/", http.StripPrefix("/api/auth", utils.ProxyHandler(API_URL_AUTH)))
 		})
 	})
 
-	return r
+	// not allowed and not found handlers
+	m.NotFound(func(w http.ResponseWriter, r *http.Request) {
+		helpers.ErrorJSON(w, errors.New("route not found"), http.StatusNotFound)
+	})
+
+	m.MethodNotAllowed(func(w http.ResponseWriter, r *http.Request) {
+		helpers.ErrorJSON(w, errors.New("method not allowed"), http.StatusMethodNotAllowed)
+	})
+
+	return m
 
 }

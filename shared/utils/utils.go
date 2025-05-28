@@ -1,13 +1,34 @@
 package utils
 
 import (
+	"fmt"
+	"math/rand"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"regexp"
+	"strconv"
 
 	"golang.org/x/crypto/bcrypt"
 )
+
+func GenerateUserID(prefix string) string {
+	first := 1
+	rest := ""
+	for range 7 {
+		rest += strconv.Itoa(rand.Intn(10))
+	}
+	return fmt.Sprintf("%s-%d%s", prefix, first, rest)
+}
+
+func GenerateAccountNumber(prefix string) string {
+	first := 9910
+	rest := ""
+	for range 12 {
+		rest += strconv.Itoa(rand.Intn(10))
+	}
+	return fmt.Sprintf("%s-%d%s", prefix, first, rest)
+}
 
 func HashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)

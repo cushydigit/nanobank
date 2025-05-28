@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"log"
 
 	"github.com/cushydigit/nanobank/auth-service/internal/repository"
 	myerrors "github.com/cushydigit/nanobank/shared/errors"
@@ -23,7 +24,7 @@ func NewAuthService(r repository.UserRepository, c myredis.AuthCacher) *AuthServ
 	}
 }
 
-func (s *AuthService) Register(username, email, password string) (*models.User, error) {
+func (s *AuthService) Register(ctx context.Context, username, email, password string) (*models.User, error) {
 
 	// check email duplication
 	if exists, _ := s.repo.FindByEmail(email); exists != nil {
@@ -43,7 +44,7 @@ func (s *AuthService) Register(username, email, password string) (*models.User, 
 
 }
 
-func (s *AuthService) Login(email, password string) (*models.User, *types.JWTTokens, error) {
+func (s *AuthService) Login(ctx context.Context, email, password string) (*models.User, *types.JWTTokens, error) {
 	user, err := s.repo.FindByEmail(email)
 	if err != nil {
 		return nil, nil, myerrors.ErrInternalServer
@@ -63,11 +64,17 @@ func (s *AuthService) Login(email, password string) (*models.User, *types.JWTTok
 		return nil, nil, myerrors.ErrInternalServer
 	}
 
+	// store new tokens in cache
+	if err := s.cacher.SetAuth(ctx, user.ID, tokens.RefreshToken); err != nil {
+		log.Printf("failed to store new tokens: %v", err)
+		return nil, nil, err
+	}
+
 	return user, tokens, nil
 
 }
 
-func (s *AuthService) Refresh(refreshToken string) (*models.User, *types.JWTTokens, error) {
+func (s *AuthService) Refresh(ctx context.Context, refreshToken string) (*models.User, *types.JWTTokens, error) {
 	claims, err := utils.ValidateToken(refreshToken)
 	if err != nil {
 		return nil, nil, myerrors.ErrInvalidRefreshToken
@@ -78,21 +85,34 @@ func (s *AuthService) Refresh(refreshToken string) (*models.User, *types.JWTToke
 		Email:    claims.Email,
 		Username: claims.Username,
 	}
+	// genereate new tokens
 	tokens, err := utils.GenerateTokens(user)
 	if err != nil {
 		return nil, nil, myerrors.ErrInternalServer
 	}
 
+	// store new tokens in cache
+	if err := s.cacher.SetAuth(ctx, user.ID, tokens.RefreshToken); err != nil {
+		log.Printf("failed to store new tokens: %v", err)
+		return nil, nil, err
+	}
+
 	return user, tokens, nil
 }
 
-func (s *AuthService) Logout(refreshToken string) error {
+func (s *AuthService) Logout(ctx context.Context, refreshToken string) error {
 	claims, err := utils.ValidateToken(refreshToken)
 	if err != nil {
 		return myerrors.ErrInvalidRefreshToken
 	}
 
+	// delete tokens from cache
+	if err := s.cacher.DelAuth(ctx, claims.UserID); err != nil {
+		log.Printf("error deleting auth refresh token: %v", err)
+		return err
+	}
+
 	// delete from redis
-	return s.cacher.DelAuth(context.Background(), claims.UserID)
+	return nil
 
 }
