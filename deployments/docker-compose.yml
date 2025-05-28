@@ -10,6 +10,7 @@ services:
       PORT: "8080"
       JWT_SECRET: "veryverysecretkey"
       API_URL_AUTH: "http://auth-service:8081"
+      API_URL_ACCOUNT: "http://account-service:8082"
       API_URL_REDIS: "redis:6379"
     depends_on:
       - redis
@@ -30,8 +31,20 @@ services:
       API_URL_REDIS: "redis:6379"
       ROOT_PASSWORD: "password"
     depends_on:
-      - postgres
-      - redis
+      - gateway
+
+  account-service:
+    image: account-service
+    build:
+      context: ../
+      dockerfile: ./account-service/Dockerfile
+    ports:
+      - 8082:8080
+    environment:
+      PORT: "8082"
+      DNS: "postgres://user:password@postgres:5432/authdb?sslmode=disable&connect_timeout=5"
+    depends_on:
+      - gateway
 
   redis:
     image: docker.arvancloud.ir/redis:alpine
@@ -48,6 +61,7 @@ services:
     volumes:
       - ../db-data/postgres/:/var/lib/postgresql/data/
       - ../db/init-authdb.sql:/docker-entrypoint-initdb.d/init-authdb.sql
+      - ../db/init-accountdb.sql:/docker-entrypoint-initdb.d/init-accountdb.sql
     command: | 
       bash -c "
         docker-entrypoint.sh postgres &
@@ -58,5 +72,8 @@ services:
         psql -U user -tc \"SELECT 1 FROM pg_database WHERE datname = 'authdb';\" | grep -q 1 || psql -U user -c 'CREATE DATABASE authdb;' &&
         echo 'Running scheme for authdb...' &&
         psql -U user -d authdb -f /docker-entrypoint-initdb.d/init-authdb.sql &&
+        psql -U user -tc \"SELECT 1 FROM pg_database WHERE datname = 'acountdb';\" | grep -q 1 || psql -U user -c 'CREATE DATABASE accountdb;' &&
+        echo 'Running scheme for accountdb...' &&
+        psql -U user -d accountdb -f /docker-entrypoint-initdb.d/init-accountdb.sql &&
         tail -f /dev/null
       "

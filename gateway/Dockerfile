@@ -2,6 +2,7 @@
 FROM docker.arvancloud.ir/golang:1.24-alpine AS builder
 
 ARG SERVICE_NAME=gateway
+ENV SERVICE_NAME=${SERVICE_NAME}
 
 WORKDIR /app
 
@@ -19,6 +20,9 @@ RUN GOOS=linux CGO_ENABLED=0 go build -o /bin/${SERVICE_NAME} .
 
 # --- Final Image ---
 FROM docker.arvancloud.ir/alpine:latest
+
+ARG SERVICE_NAME=gateway
+ENV SERVICE_NAME=${SERVICE_NAME}
 
 WORKDIR /app
 
