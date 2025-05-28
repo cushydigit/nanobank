@@ -2,9 +2,9 @@ package models
 
 import (
 	"fmt"
+	"math/rand"
+	"strconv"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 type User struct {
@@ -16,7 +16,7 @@ type User struct {
 }
 
 func NewUser(username, email, hashedPassowrd string) *User {
-	id := fmt.Sprintf("NBU-%s", uuid.New().String())
+	id := generateUserID("NBU")
 	return &User{
 		ID:        id,
 		Username:  username,
@@ -24,4 +24,13 @@ func NewUser(username, email, hashedPassowrd string) *User {
 		Passowrd:  hashedPassowrd,
 		CreatedAt: time.Now().UTC(),
 	}
+}
+
+func generateUserID(prefix string) string {
+	first := 1
+	rest := ""
+	for range 7 {
+		rest += strconv.Itoa(rand.Intn(10))
+	}
+	return fmt.Sprintf("%s-%d%s", prefix, first, rest)
 }
