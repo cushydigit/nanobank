@@ -113,6 +113,7 @@ func (h *AccountHandler) Withdraw(w http.ResponseWriter, r *http.Request) {
 		}
 		if err == myerrors.ErrInsufficientBalance {
 			helpers.ErrorJSON(w, err, http.StatusUnprocessableEntity)
+			return
 		}
 		helpers.ErrorJSON(w, myerrors.ErrInternalServer, http.StatusInternalServerError)
 		return
