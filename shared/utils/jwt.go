@@ -16,7 +16,6 @@ var JWT_SECRET = os.Getenv("JWT_SECRET")
 
 func GenerateTokens(user *models.User) (*types.JWTTokens, error) {
 	now := time.Now()
-	log.Printf("JWT_SECRET: %s", JWT_SECRET)
 
 	secret := []byte(JWT_SECRET)
 
@@ -51,7 +50,6 @@ func GenerateTokens(user *models.User) (*types.JWTTokens, error) {
 }
 
 func ValidateToken(tokenStr string) (*types.JWTClaims, error) {
-	log.Printf("JWT_SECRET: %s", JWT_SECRET)
 
 	secret := []byte(JWT_SECRET)
 

@@ -75,7 +75,6 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (*model
 }
 
 func (s *AuthService) Refresh(ctx context.Context, refreshToken string) (*models.User, *types.JWTTokens, error) {
-	log.Printf("validting: %s", refreshToken)
 	claims, err := utils.ValidateToken(refreshToken)
 	if err != nil {
 		return nil, nil, myerrors.ErrInvalidRefreshToken
