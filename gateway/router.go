@@ -22,8 +22,8 @@ func Routes() http.Handler {
 	// specify who is allowed to connect
 	m.Use(cors.Handler(cors.Options{
 		AllowedOrigins: []string{
-			"http://localhost:5134",  // Dev frontend
-			"https://microstore.com", // Prod frontend
+			"http://localhost:5134", // Dev frontend
+			"https://nanobank.com",  // Prod frontend
 		},
 		AllowedMethods: []string{"GET", "POST", "DELETE", "OPTIONS"},
 		AllowedHeaders: []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
@@ -40,6 +40,11 @@ func Routes() http.Handler {
 		// auth service
 		r.Route("/auth", func(r chi.Router) {
 			r.Mount("/", http.StripPrefix("/api/auth", utils.ProxyHandler(API_URL_AUTH)))
+		})
+
+		// account service
+		r.Route("/account", func(r chi.Router) {
+			r.Mount("/", http.StripPrefix("/api/account", utils.ProxyHandler(API_URL_ACCOUNT)))
 		})
 	})
 

@@ -7,6 +7,9 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/cushydigit/nanobank/account-service/internal/handler"
+	"github.com/cushydigit/nanobank/account-service/internal/repository"
+	"github.com/cushydigit/nanobank/account-service/internal/service"
 	"github.com/cushydigit/nanobank/shared/database"
 	"github.com/cushydigit/nanobank/shared/helpers"
 	"github.com/go-chi/chi/v5"
@@ -26,14 +29,14 @@ func main() {
 	}
 
 	// connect DB
-	_ = database.ConnectDB(DNS)
+	db := database.ConnectDB(DNS)
 
 	// create repo
-	// r := repository.NewPostgresUserRepository(db)
+	r := repository.NewPostgresAccountRepository(db)
 	// create service
-	// s := service.NewAuthService(r, c)
+	s := service.NewAccountService(r)
 	// create handler
-	// h := handler.NewAuthHandler(s)
+	h := handler.NewAccountHandler(s)
 
 	// create router mux
 	m := chi.NewRouter()
@@ -44,11 +47,11 @@ func main() {
 	m.Use(middleware.Heartbeat("/ping"))
 
 	// setup routes
-	// m.With(middlewares.ValidateRegisterUserRequest).Post("/register", h.Register)
-	// m.With(middlewares.ProvideAuthRequest).Post("/login", h.Login)
-	// m.With(middlewares.ProvideRefreshRequest).Post("/refresh", h.Refresh)
-	// m.With(middlewares.ProvideRefreshRequest).Post("/logout", h.Logout)
-	//
+	m.Get("/", h.GetByUserID)
+	m.Post("/create", h.Create)
+	m.Post("/deposit", h.Deposit)
+	m.Post("/withdraw", h.Withdraw)
+
 	// not allowed and not found handlers
 	m.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		helpers.ErrorJSON(w, errors.New("route not found"), http.StatusNotFound)
