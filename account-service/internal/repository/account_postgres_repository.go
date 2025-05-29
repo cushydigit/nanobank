@@ -4,14 +4,13 @@ import (
 	"context"
 	"database/sql"
 
-	myerrors "github.com/cushydigit/nanobank/shared/errors"
 	"github.com/cushydigit/nanobank/shared/models"
 )
 
 type AccountRepository interface {
 	FindByUserID(ctx context.Context, userID string) (*models.Account, error)
 	Create(ctx context.Context, account *models.Account) error
-	UpdateBalance(ctx context.Context, amount float64) error
+	UpdateBalance(ctx context.Context, userID string, amount int64) error
 }
 
 type PostgresAccountRepository struct {
@@ -29,11 +28,7 @@ func (r *PostgresAccountRepository) FindByUserID(ctx context.Context, userID str
 		`SELECT id, user_id, balance, created_at, upadated_at FROM accounts WHERE user_id = $1`,
 		userID,
 	).Scan(&a.ID, &a.UserID, &a.Balance, &a.CreatedAt, &a.UpdatedAt); err != nil {
-		if err == sql.ErrNoRows {
-			return nil, myerrors.ErrAccountNotFound
-		} else {
-			return nil, err
-		}
+		return nil, err
 	}
 
 	return &a, nil
@@ -50,7 +45,7 @@ func (r *PostgresAccountRepository) Create(ctx context.Context, a *models.Accoun
 	return nil
 }
 
-func (r *PostgresAccountRepository) UpdateBalance(ctx context.Context, userID string, amount float64) error {
+func (r *PostgresAccountRepository) UpdateBalance(ctx context.Context, userID string, amount int64) error {
 	if _, err := r.DB.ExecContext(
 		ctx,
 		`UPDATE accounts SET balance = balance + $1 WHERE user_id = $2`,
