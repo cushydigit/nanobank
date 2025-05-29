@@ -12,6 +12,7 @@ import (
 	"github.com/cushydigit/nanobank/account-service/internal/service"
 	"github.com/cushydigit/nanobank/shared/database"
 	"github.com/cushydigit/nanobank/shared/helpers"
+	"github.com/cushydigit/nanobank/shared/middlewares"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
@@ -47,10 +48,10 @@ func main() {
 	m.Use(middleware.Heartbeat("/ping"))
 
 	// setup routes
-	m.Get("/", h.GetByUserID)
-	m.Post("/create", h.Create)
-	m.Post("/deposit", h.Deposit)
-	m.Post("/withdraw", h.Withdraw)
+	m.Get("/", h.Get)
+	m.Post("/", h.Create)
+	m.With(middlewares.ProvideUpdateBalanceReq).Post("/deposit", h.Deposit)
+	m.With(middlewares.ProvideUpdateBalanceReq).Post("/withdraw", h.Withdraw)
 
 	// not allowed and not found handlers
 	m.NotFound(func(w http.ResponseWriter, r *http.Request) {

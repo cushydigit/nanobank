@@ -2,6 +2,7 @@ package utils
 
 import (
 	"errors"
+	"log"
 	"os"
 	"time"
 
@@ -11,10 +12,13 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var secret = os.Getenv("JWT_SECRET")
+var JWT_SECRET = os.Getenv("JWT_SECRET")
 
 func GenerateTokens(user *models.User) (*types.JWTTokens, error) {
 	now := time.Now()
+	log.Printf("JWT_SECRET: %s", JWT_SECRET)
+
+	secret := []byte(JWT_SECRET)
 
 	access := jwt.NewWithClaims(jwt.SigningMethodHS256, types.JWTClaims{
 		UserID:   user.ID,
@@ -24,7 +28,7 @@ func GenerateTokens(user *models.User) (*types.JWTTokens, error) {
 			ExpiresAt: jwt.NewNumericDate(now.Add(config.TTL_ACCESS_TOKEN)),
 		},
 	})
-	accessToken, err := access.SignedString([]byte(secret))
+	accessToken, err := access.SignedString(secret)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +40,7 @@ func GenerateTokens(user *models.User) (*types.JWTTokens, error) {
 			ExpiresAt: jwt.NewNumericDate(now.Add(config.TTL_REFRESH_TOKEN)),
 		},
 	})
-	refreshToken, err := refresh.SignedString([]byte(secret))
+	refreshToken, err := refresh.SignedString(secret)
 	if err != nil {
 		return nil, err
 	}
@@ -47,8 +51,12 @@ func GenerateTokens(user *models.User) (*types.JWTTokens, error) {
 }
 
 func ValidateToken(tokenStr string) (*types.JWTClaims, error) {
-	token, err := jwt.ParseWithClaims(tokenStr, &types.JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte(secret), nil
+	log.Printf("JWT_SECRET: %s", JWT_SECRET)
+
+	secret := []byte(JWT_SECRET)
+
+	token, err := jwt.ParseWithClaims(tokenStr, &types.JWTClaims{}, func(token *jwt.Token) (any, error) {
+		return secret, nil
 	})
 	if err != nil {
 		return nil, err

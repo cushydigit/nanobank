@@ -21,16 +21,18 @@ type HeaderKey string
 const (
 	XUserID    HeaderKey = "X-User-ID"
 	XUserEmail HeaderKey = "X-Email-ID"
+	XUsername  HeaderKey = "X-Username"
 )
 
 type ContextKey string
 
 const (
-	RegisterReqKey ContextKey = "register_req"
-	AuthReqKey     ContextKey = "auth_req"
-	RefreshReqKey  ContextKey = "refresh_req"
-	UserIDKey      ContextKey = "user_id"
-	UserEmailKey   ContextKey = "user_email"
+	RegisterReqKey     ContextKey = "register_req"
+	AuthReqKey         ContextKey = "auth_req"
+	RefreshReqKey      ContextKey = "refresh_req"
+	UserIDKey          ContextKey = "user_id"
+	UserEmailKey       ContextKey = "user_email"
+	UpdateBlanceReqKey ContextKey = "update_balance_req"
 )
 
 // request bodies
@@ -47,6 +49,10 @@ type AuthReqBody struct {
 
 type RefreshReqBody struct {
 	RefreshToken string `json:"refresh_token"`
+}
+
+type UpdateBalanceReqBody struct {
+	Amount int64 `json:"amount"`
 }
 
 // response

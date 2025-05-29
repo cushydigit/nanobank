@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/cushydigit/nanobank/auth-service/internal/service"
@@ -21,7 +20,7 @@ func NewAuthHandler(s *service.AuthService) *AuthHandler {
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	req, ok := r.Context().Value(types.RegisterReqKey).(types.RegisterReqBody)
 	if !ok {
-		helpers.ErrorJSON(w, errors.New("object not found in context of request"), http.StatusInternalServerError)
+		helpers.ErrorJSON(w, myerrors.ErrContextValueNotFoundInRequest, http.StatusInternalServerError)
 		return
 	}
 
@@ -46,7 +45,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	req, ok := r.Context().Value(types.AuthReqKey).(types.AuthReqBody)
 	if !ok {
-		helpers.ErrorJSON(w, errors.New("object not found in context of request"), http.StatusInternalServerError)
+		helpers.ErrorJSON(w, myerrors.ErrContextValueNotFoundInRequest, http.StatusInternalServerError)
 		return
 	}
 
@@ -79,7 +78,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	req, ok := r.Context().Value(types.RefreshReqKey).(types.RefreshReqBody)
 	if !ok {
-		helpers.ErrorJSON(w, errors.New("object not found in context of request"), http.StatusInternalServerError)
+		helpers.ErrorJSON(w, myerrors.ErrContextValueNotFoundInRequest, http.StatusInternalServerError)
 		return
 	}
 	user, tokens, err := h.service.Refresh(r.Context(), req.RefreshToken)
@@ -112,7 +111,7 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	req, ok := r.Context().Value(types.RefreshReqKey).(types.RefreshReqBody)
 	if !ok {
-		helpers.ErrorJSON(w, errors.New("object not found in context of reqeust"), http.StatusInternalServerError)
+		helpers.ErrorJSON(w, myerrors.ErrContextValueNotFoundInRequest, http.StatusInternalServerError)
 		return
 	}
 

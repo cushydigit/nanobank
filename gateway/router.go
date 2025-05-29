@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/cushydigit/nanobank/shared/helpers"
+	"github.com/cushydigit/nanobank/shared/middlewares"
 	"github.com/cushydigit/nanobank/shared/utils"
 
 	"github.com/go-chi/chi/v5"
@@ -43,7 +44,7 @@ func Routes() http.Handler {
 		})
 
 		// account service
-		r.Route("/account", func(r chi.Router) {
+		r.With(middlewares.RequireAuth).Route("/account", func(r chi.Router) {
 			r.Mount("/", http.StripPrefix("/api/account", utils.ProxyHandler(API_URL_ACCOUNT)))
 		})
 	})

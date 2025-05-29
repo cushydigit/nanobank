@@ -18,6 +18,7 @@ func NewAccountService(r repository.AccountRepository) *AccountService {
 	return &AccountService{repo: r}
 }
 
+// returns Errs: ErrAccountNotFound, ErrInternalServer
 func (s *AccountService) Get(ctx context.Context, userID string) (*models.Account, error) {
 	a, err := s.repo.FindByUserID(ctx, userID)
 	if err != nil {
@@ -26,12 +27,13 @@ func (s *AccountService) Get(ctx context.Context, userID string) (*models.Accoun
 			return nil, myerrors.ErrAccountNotFound
 		} else {
 			log.Printf("unexpected error: %v", err)
-			return nil, err
+			return nil, myerrors.ErrInternalServer
 		}
 	}
 	return a, nil
 }
 
+// returns Errs: ErrAccountAlreadyExists, ErrInternalServer
 func (s *AccountService) Create(ctx context.Context, userID string) (*models.Account, error) {
 	if exists, _ := s.repo.FindByUserID(ctx, userID); exists != nil {
 		return nil, myerrors.ErrAccountAlreadyExists
@@ -39,11 +41,12 @@ func (s *AccountService) Create(ctx context.Context, userID string) (*models.Acc
 	newAccount := models.NewAccount(userID)
 	if err := s.repo.Create(ctx, newAccount); err != nil {
 		log.Printf("unexpected error: %v", err)
-		return nil, err
+		return nil, myerrors.ErrInternalServer
 	}
 	return newAccount, nil
 }
 
+// returns Errs: ErrAmountMustBePositive, ErrAccountNotFound, ErrInternalServer
 func (s *AccountService) Deposit(ctx context.Context, userID string, amount int64) error {
 	if amount <= 0 {
 		return myerrors.ErrAmountMustBePositive
@@ -53,7 +56,7 @@ func (s *AccountService) Deposit(ctx context.Context, userID string, amount int6
 			return myerrors.ErrAccountNotFound
 		} else {
 			log.Printf("unexpected error: %v", err)
-			return err
+			return myerrors.ErrInternalServer
 		}
 	}
 	if err := s.repo.UpdateBalance(ctx, userID, amount); err != nil {
@@ -63,6 +66,7 @@ func (s *AccountService) Deposit(ctx context.Context, userID string, amount int6
 	return nil
 }
 
+// returns Errs: ErrAmountMustBePositive, ErrAccountNotFound, ErrInsufficientBalance, ErrInternalServer
 func (s *AccountService) Withdraw(ctx context.Context, userID string, amount int64) error {
 	if amount <= 0 {
 		return myerrors.ErrAmountMustBePositive
@@ -73,7 +77,7 @@ func (s *AccountService) Withdraw(ctx context.Context, userID string, amount int
 			return myerrors.ErrAccountNotFound
 		} else {
 			log.Printf("unexpected error: %v", err)
-			return err
+			return myerrors.ErrInternalServer
 		}
 	}
 

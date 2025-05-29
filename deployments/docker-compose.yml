@@ -9,6 +9,8 @@ services:
     environment:
       PORT: "8080"
       JWT_SECRET: "veryverysecretkey"
+      ROOT_EMAIL: "admin@nanobank.com"
+      ROOT_PASSWORD: "password"
       API_URL_AUTH: "http://auth-service:8081"
       API_URL_ACCOUNT: "http://account-service:8082"
       API_URL_REDIS: "redis:6379"
@@ -28,8 +30,8 @@ services:
       JWT_SECRET: "veryverysecretkey"
       DNS: "postgres://user:password@postgres:5432/authdb?sslmode=disable&connect_timeout=5"
       ROOT_EMAIL: "admin@nanobank.com"
-      API_URL_REDIS: "redis:6379"
       ROOT_PASSWORD: "password"
+      API_URL_REDIS: "redis:6379"
     depends_on:
       - gateway
 
@@ -42,7 +44,7 @@ services:
       - 8082:8080
     environment:
       PORT: "8082"
-      DNS: "postgres://user:password@postgres:5432/authdb?sslmode=disable&connect_timeout=5"
+      DNS: "postgres://user:password@postgres:5432/accountdb?sslmode=disable&connect_timeout=5"
     depends_on:
       - gateway
 
