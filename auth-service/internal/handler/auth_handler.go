@@ -20,17 +20,19 @@ func NewAuthHandler(s *service.AuthService) *AuthHandler {
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	req, ok := r.Context().Value(types.RegisterReqKey).(types.RegisterReqBody)
 	if !ok {
-		helpers.ErrorJSON(w, myerrors.ErrContextValueNotFoundInRequest, http.StatusInternalServerError)
+		helpers.ErrorJSON(w, myerrors.ErrInternalServer, http.StatusInternalServerError)
 		return
 	}
 
 	newUser, err := h.service.Register(r.Context(), req.Username, req.Email, req.Password)
-	if err == myerrors.ErrDuplicateEmail {
-		helpers.ErrorJSON(w, err, http.StatusConflict)
-		return
-	} else if err != nil {
-		helpers.ErrorJSON(w, err, http.StatusInternalServerError)
-		return
+	if err != nil {
+		if err == myerrors.ErrDuplicateEmail {
+			helpers.ErrorJSON(w, err, http.StatusConflict)
+			return
+		} else {
+			helpers.ErrorJSON(w, err, http.StatusInternalServerError)
+			return
+		}
 	}
 
 	payload := types.Response{
@@ -45,18 +47,17 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	req, ok := r.Context().Value(types.AuthReqKey).(types.AuthReqBody)
 	if !ok {
-		helpers.ErrorJSON(w, myerrors.ErrContextValueNotFoundInRequest, http.StatusInternalServerError)
+		helpers.ErrorJSON(w, myerrors.ErrInternalServer, http.StatusInternalServerError)
 		return
 	}
 
 	user, tokens, err := h.service.Login(r.Context(), req.Email, req.Password)
 	if err != nil {
-		switch err {
-		case myerrors.ErrInternalServer:
-			helpers.ErrorJSON(w, err, http.StatusInternalServerError)
-			return
-		default:
+		if err == myerrors.ErrInvalidCredentials {
 			helpers.ErrorJSON(w, err, http.StatusUnauthorized)
+			return
+		} else {
+			helpers.ErrorJSON(w, err, http.StatusInternalServerError)
 			return
 		}
 	}
@@ -78,17 +79,16 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	req, ok := r.Context().Value(types.RefreshReqKey).(types.RefreshReqBody)
 	if !ok {
-		helpers.ErrorJSON(w, myerrors.ErrContextValueNotFoundInRequest, http.StatusInternalServerError)
+		helpers.ErrorJSON(w, myerrors.ErrInternalServer, http.StatusInternalServerError)
 		return
 	}
 	user, tokens, err := h.service.Refresh(r.Context(), req.RefreshToken)
 	if err != nil {
-		switch err {
-		case myerrors.ErrInternalServer:
-			helpers.ErrorJSON(w, err, http.StatusInternalServerError)
-			return
-		default:
+		if err == myerrors.ErrInvalidRefreshToken {
 			helpers.ErrorJSON(w, err, http.StatusUnauthorized)
+			return
+		} else {
+			helpers.ErrorJSON(w, err, http.StatusInternalServerError)
 			return
 		}
 	}
@@ -111,13 +111,18 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	req, ok := r.Context().Value(types.RefreshReqKey).(types.RefreshReqBody)
 	if !ok {
-		helpers.ErrorJSON(w, myerrors.ErrContextValueNotFoundInRequest, http.StatusInternalServerError)
+		helpers.ErrorJSON(w, myerrors.ErrInternalServer, http.StatusInternalServerError)
 		return
 	}
 
 	if err := h.service.Logout(r.Context(), req.RefreshToken); err != nil {
-		helpers.ErrorJSON(w, err, http.StatusUnauthorized)
-		return
+		if err == myerrors.ErrInvalidRefreshToken {
+			helpers.ErrorJSON(w, err, http.StatusUnauthorized)
+			return
+		} else {
+			helpers.ErrorJSON(w, err, http.StatusInternalServerError)
+			return
+		}
 	}
 
 	payload := types.Response{

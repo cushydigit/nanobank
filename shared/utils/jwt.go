@@ -1,12 +1,11 @@
 package utils
 
 import (
-	"errors"
-	"log"
 	"os"
 	"time"
 
 	"github.com/cushydigit/nanobank/shared/config"
+	myerrors "github.com/cushydigit/nanobank/shared/errors"
 	"github.com/cushydigit/nanobank/shared/models"
 	"github.com/cushydigit/nanobank/shared/types"
 	"github.com/golang-jwt/jwt/v5"
@@ -49,7 +48,12 @@ func GenerateTokens(user *models.User) (*types.JWTTokens, error) {
 	}, nil
 }
 
+// returns ErrJWTEmptyToken, ErrJWTExpiredToken, ErrJWTInvalidToken, ErrJWTTokenClaimsTypeMismatch, ErrJWTFailedToParseToken
 func ValidateToken(tokenStr string) (*types.JWTClaims, error) {
+
+	if tokenStr == "" {
+		return nil, myerrors.ErrJWTEmptyToken
+	}
 
 	secret := []byte(JWT_SECRET)
 
@@ -57,16 +61,20 @@ func ValidateToken(tokenStr string) (*types.JWTClaims, error) {
 		return secret, nil
 	})
 	if err != nil {
-		return nil, err
+		return nil, myerrors.ErrJWTFailedToParseToken
 	}
 
 	claims, ok := token.Claims.(*types.JWTClaims)
 	if !ok || !token.Valid {
-		return nil, errors.New("invalid token")
+		return nil, myerrors.ErrJWTTokenClaimsTypeMismatch
+	}
+
+	if !token.Valid {
+		return nil, myerrors.ErrJWTInvalidToken
 	}
 
 	if claims.ExpiresAt.Time.Before(time.Now()) {
-		return nil, errors.New("token expired")
+		return nil, myerrors.ErrJWTExpiredToken
 	}
 
 	return claims, nil

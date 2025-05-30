@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"log"
 
 	"github.com/cushydigit/nanobank/auth-service/internal/repository"
@@ -24,34 +25,41 @@ func NewAuthService(r repository.UserRepository, c myredis.AuthCacher) *AuthServ
 	}
 }
 
+// returns ErrDuplicateEmail, ErrInternalServer
 func (s *AuthService) Register(ctx context.Context, username, email, password string) (*models.User, error) {
 
 	// check email duplication
-	if exists, _ := s.repo.FindByEmail(email); exists != nil {
+	if exists, _ := s.repo.FindByEmail(ctx, email); exists != nil {
 		return nil, myerrors.ErrDuplicateEmail
 	}
 
 	// hash password
-	hashedPassword, _ := utils.HashPassword(password)
+	hashedPassword, err := utils.HashPassword(password)
+	if err != nil {
+		log.Printf("unexpected err: %v", err)
+		return nil, myerrors.ErrInternalServer
+	}
 	newUser := models.NewUser(username, email, hashedPassword)
 
 	// insert new user to DB
-	if err := s.repo.Create(newUser); err != nil {
-		return nil, err
+	if err := s.repo.Create(ctx, newUser); err != nil {
+		return nil, myerrors.ErrInternalServer
 	}
 
 	return newUser, nil
 
 }
 
+// returns ErrInvalidCredentials, ErrInternalServer
 func (s *AuthService) Login(ctx context.Context, email, password string) (*models.User, *types.JWTTokens, error) {
-	user, err := s.repo.FindByEmail(email)
+	user, err := s.repo.FindByEmail(ctx, email)
 	if err != nil {
-		return nil, nil, myerrors.ErrInternalServer
-	}
-	if user == nil {
-		// user not found
-		return nil, nil, myerrors.ErrInvalidCredentials
+		if err == sql.ErrNoRows {
+			return nil, nil, myerrors.ErrInvalidCredentials
+		} else {
+			log.Printf("unexpected err: %v", err)
+			return nil, nil, myerrors.ErrInternalServer
+		}
 	}
 	// check password
 	if ok := utils.CheckPasswordHash(password, user.Passowrd); !ok {
@@ -61,22 +69,30 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (*model
 	// generate tokens
 	tokens, err := utils.GenerateTokens(user)
 	if err != nil {
+		log.Printf("unexpected err: %v", err)
 		return nil, nil, myerrors.ErrInternalServer
 	}
 
 	// store new tokens in cache
 	if err := s.cacher.SetAuth(ctx, user.ID, tokens.RefreshToken); err != nil {
-		log.Printf("failed to store new tokens: %v", err)
-		return nil, nil, err
+		log.Printf("unexpected err: %v", err)
+		return nil, nil, myerrors.ErrInternalServer
 	}
 
 	return user, tokens, nil
 
 }
 
+// returns ErrInvalidRefreshToken, ErrInternalServer
 func (s *AuthService) Refresh(ctx context.Context, refreshToken string) (*models.User, *types.JWTTokens, error) {
 	claims, err := utils.ValidateToken(refreshToken)
 	if err != nil {
+		return nil, nil, myerrors.ErrInvalidRefreshToken
+	}
+
+	// check if token is not rotated
+	token, err := s.cacher.GetAuth(ctx, claims.UserID)
+	if err != nil || token != refreshToken {
 		return nil, nil, myerrors.ErrInvalidRefreshToken
 	}
 
@@ -88,18 +104,20 @@ func (s *AuthService) Refresh(ctx context.Context, refreshToken string) (*models
 	// genereate new tokens
 	tokens, err := utils.GenerateTokens(user)
 	if err != nil {
+		log.Printf("unexpected err: %v", err)
 		return nil, nil, myerrors.ErrInternalServer
 	}
 
 	// store new tokens in cache
 	if err := s.cacher.SetAuth(ctx, user.ID, tokens.RefreshToken); err != nil {
-		log.Printf("failed to store new tokens: %v", err)
-		return nil, nil, err
+		log.Printf("unexpected err: %v", err)
+		return nil, nil, myerrors.ErrInternalServer
 	}
 
 	return user, tokens, nil
 }
 
+// returns ErrInvalidRefreshToken, ErrInternalServer
 func (s *AuthService) Logout(ctx context.Context, refreshToken string) error {
 	claims, err := utils.ValidateToken(refreshToken)
 	if err != nil {
@@ -108,11 +126,9 @@ func (s *AuthService) Logout(ctx context.Context, refreshToken string) error {
 
 	// delete tokens from cache
 	if err := s.cacher.DelAuth(ctx, claims.UserID); err != nil {
-		log.Printf("error deleting auth refresh token: %v", err)
-		return err
+		log.Printf("unexpected err: %v", err)
+		return myerrors.ErrInternalServer
 	}
 
-	// delete from redis
 	return nil
-
 }

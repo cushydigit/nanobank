@@ -50,7 +50,7 @@ func main() {
 	h := handler.NewAuthHandler(s)
 
 	// init the root user or admin that has all privilages
-	if admin, _ := r.FindByEmail(ROOT_EMAIL); admin == nil {
+	if admin, _ := r.FindByEmail(ctx, ROOT_EMAIL); admin == nil {
 		log.Printf("the root user is not exists try to register a new root")
 		if _, err := s.Register(ctx, "admin", ROOT_EMAIL, ROOT_PASSWORD); err != nil {
 			log.Fatalf("failed to create root user: %v", err)
