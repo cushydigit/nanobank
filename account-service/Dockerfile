@@ -1,7 +1,7 @@
 # service/Dockerfile => require to build from the root
 FROM docker.arvancloud.ir/golang:1.24-alpine AS builder
 
-ARG SERVICE_NAME=auth-service
+ARG SERVICE_NAME=account-service
 ENV SERVICE_NAME=${SERVICE_NAME}
 
 WORKDIR /app
@@ -21,10 +21,10 @@ RUN GOOS=linux CGO_ENABLED=0 go build -o /bin/${SERVICE_NAME} ./cmd/
 # --- Final Image ---
 FROM docker.arvancloud.ir/alpine:latest
 
-WORKDIR /app
-
-ARG SERVICE_NAME=auth-service
+ARG SERVICE_NAME=account-service
 ENV SERVICE_NAME=${SERVICE_NAME}
+
+WORKDIR /app
 
 COPY --from=builder /bin/${SERVICE_NAME} .
 

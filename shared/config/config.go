@@ -3,7 +3,7 @@ package config
 import "time"
 
 const (
-	TTL_REFRESH_TOKEN           = time.Minute * 15
+	TTL_REFRESH_TOKEN           = time.Minute * 3
 	TTL_ACCESS_TOKEN            = time.Minute * 1
 	TIMEOUT_GATEWAY_READ        = time.Second * 10
 	TIMEOUT_GATEWAY_WRITE       = time.Second * 15

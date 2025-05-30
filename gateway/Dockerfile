@@ -1,26 +1,32 @@
-# gateway/Dockerfile => require to build from the root
+# service/Dockerfile => require to build from the root
 FROM docker.arvancloud.ir/golang:1.24-alpine AS builder
+
+ARG SERVICE_NAME=gateway
+ENV SERVICE_NAME=${SERVICE_NAME}
 
 WORKDIR /app
 
 COPY shared ./shared
-COPY gateway ./gateway
+COPY ${SERVICE_NAME} ./${SERVICE_NAME}
 
 # Download dependencies for shared module
 WORKDIR /app/shared
 RUN go mod download
 
 # Download and build service
-WORKDIR /app/gateway
+WORKDIR /app/${SERVICE_NAME}
 RUN go mod download
-RUN GOOS=linux CGO_ENABLED=0 go build -o /bin/gateway .
+RUN GOOS=linux CGO_ENABLED=0 go build -o /bin/${SERVICE_NAME} .
 
 # --- Final Image ---
 FROM docker.arvancloud.ir/alpine:latest
 
+ARG SERVICE_NAME=gateway
+ENV SERVICE_NAME=${SERVICE_NAME}
+
 WORKDIR /app
 
-COPY --from=builder /bin/gateway .
+COPY --from=builder /bin/${SERVICE_NAME} .
 
-CMD ["/app/gateway"]
+CMD sh -c  "/app/$SERVICE_NAME"
 
