@@ -97,7 +97,7 @@ func (s *AuthService) Refresh(ctx context.Context, refreshToken string) (*models
 	}
 
 	user := &models.User{
-		ID:       claims.ID,
+		ID:       claims.UserID,
 		Email:    claims.Email,
 		Username: claims.Username,
 	}

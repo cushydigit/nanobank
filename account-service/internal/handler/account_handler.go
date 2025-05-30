@@ -20,7 +20,6 @@ func NewAccountHandler(s *service.AccountService) *AccountHandler {
 func (h *AccountHandler) Get(w http.ResponseWriter, r *http.Request) {
 	// will injected in gateway with requireauth middleware
 	userID := r.Header.Get(string(types.XUserID))
-
 	a, err := h.service.Get(r.Context(), userID)
 	if err != nil {
 		if err == myerrors.ErrAccountNotFound {

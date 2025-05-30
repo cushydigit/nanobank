@@ -1,4 +1,7 @@
-.PHONY: tidy up down
+COMPOSE_PROJECT_NAME=nanobank
+COMPOSE_FILE=./deployments/docker-compose.yml
+
+.PHONY: tidy up down	
 tidy-gateway:
 	@cd ./gateway/ && go mod tidy
 tidy-auth:
@@ -11,9 +14,9 @@ tidy-shared:
 tidy: tidy-shared tidy-auth tidy-gateway tidy-account
 
 up:
-	COMPOSE_PROJECT_NAME=nanabank docker-compose -f ./deployments/docker-compose.yml up -d --build
+	docker-compose -p $(COMPOSE_PROJECT_NAME) -f $(COMPOSE_FILE) up -d --build
 
 down:
-	docker-compose -f ./deployments/docker-compose.yml down
+	docker-compose -p $(COMPOSE_PROJECT_NAME) -f $(COMPOSE_FILE) down
 
 reset: down up
