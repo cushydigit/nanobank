@@ -10,6 +10,7 @@ var (
 	ErrInvalidRefreshToken           = errors.New("invalid refresh token")
 	ErrAccountNotFound               = errors.New("account not found")
 	ErrAccountAlreadyExists          = errors.New("account already exists")
+	ErrTransactionNotFound           = errors.New("transaction not found")
 	ErrAmountMustBePositive          = errors.New("amount must be positive")
 	ErrInsufficientBalance           = errors.New("insufficient funds")
 	ErrMissingAuthorizationHeader    = errors.New("authorizaion header missing")

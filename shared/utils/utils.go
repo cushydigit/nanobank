@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"regexp"
 
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -40,4 +41,12 @@ func ProxyHandler(target string) http.HandlerFunc {
 		r.Host = url.Host
 		proxy.ServeHTTP(w, r)
 	}
+}
+
+func GenerateTransactionToken() (string, error) {
+	uid, err := uuid.NewV7()
+	if err != nil {
+		return "", err
+	}
+	return uid.String(), nil
 }
