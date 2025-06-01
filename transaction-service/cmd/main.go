@@ -9,6 +9,9 @@ import (
 
 	"github.com/cushydigit/nanobank/shared/database"
 	"github.com/cushydigit/nanobank/shared/helpers"
+	"github.com/cushydigit/nanobank/transaction-service/internal/handler"
+	"github.com/cushydigit/nanobank/transaction-service/internal/repository"
+	"github.com/cushydigit/nanobank/transaction-service/internal/service"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -27,14 +30,14 @@ func main() {
 	}
 
 	// connect DB
-	_ = database.ConnectDB(DNS)
+	db := database.ConnectDB(DNS)
 
 	// create repo
-	// r := repository.NewPostgresAccountRepository(db)
+	r := repository.NewPostgresTransactionRepository(db)
 	// create service
-	// s := service.NewAccountService(r)
+	s := service.NewTransactionService(r)
 	// create handler
-	// h := handler.NewAccountHandler(s)
+	h := handler.NewTransactionHandler(s)
 
 	// create router mux
 	m := chi.NewRouter()
@@ -45,10 +48,8 @@ func main() {
 	m.Use(middleware.Heartbeat("/ping"))
 
 	// setup routes
-	// m.Get("/", h.Get)
-	// m.Post("/", h.Create)
-	// m.With(middlewares.ProvideUpdateBalanceReq).Post("/deposit", h.Deposit)
-	// m.With(middlewares.ProvideUpdateBalanceReq).Post("/withdraw", h.Withdraw)
+	m.Get("/", h.ListTransactions)
+	m.Post("/", h.Create)
 
 	// not allowed and not found handlers
 	m.NotFound(func(w http.ResponseWriter, r *http.Request) {
