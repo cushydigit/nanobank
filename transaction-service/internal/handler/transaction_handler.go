@@ -21,7 +21,15 @@ func (t *TransactionHandler) Create(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func (t *TransactionHandler) ListTransactions(w http.ResponseWriter, r *http.Request) {
+func (t *TransactionHandler) GetByID(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func (t *TransactionHandler) ListByUserID(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func (t *TransactionHandler) List(w http.ResponseWriter, r *http.Request) {
 	helpers.ErrorJSON(w, errors.New("not implemented yet"))
 	return
 }
