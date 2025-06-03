@@ -9,6 +9,8 @@ import (
 
 	"github.com/cushydigit/nanobank/shared/database"
 	"github.com/cushydigit/nanobank/shared/helpers"
+	"github.com/cushydigit/nanobank/shared/middlewares"
+
 	"github.com/cushydigit/nanobank/transaction-service/internal/handler"
 	"github.com/cushydigit/nanobank/transaction-service/internal/repository"
 	"github.com/cushydigit/nanobank/transaction-service/internal/service"
@@ -48,8 +50,9 @@ func main() {
 	m.Use(middleware.Heartbeat("/ping"))
 
 	// setup routes
-	m.Get("/", h.ListTransactions)
-	m.Post("/", h.Create)
+	m.Get("/", h.List)
+	m.With(middlewares.ProvideCreateTransactionReq).Post("/internal/create", h.Create)
+	m.With(middlewares.ProvideUpdateTransactionReq).Post("/internal/update", h.Create)
 
 	// not allowed and not found handlers
 	m.NotFound(func(w http.ResponseWriter, r *http.Request) {

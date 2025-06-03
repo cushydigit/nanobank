@@ -1,6 +1,7 @@
 package types
 
 import (
+	"github.com/cushydigit/nanobank/shared/models"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -27,12 +28,16 @@ const (
 type ContextKey string
 
 const (
-	RegisterReqKey     ContextKey = "register_req"
-	AuthReqKey         ContextKey = "auth_req"
-	RefreshReqKey      ContextKey = "refresh_req"
-	UserIDKey          ContextKey = "user_id"
-	UserEmailKey       ContextKey = "user_email"
-	UpdateBlanceReqKey ContextKey = "update_balance_req"
+	RegisterReqKey          ContextKey = "register_req"
+	AuthReqKey              ContextKey = "auth_req"
+	RefreshReqKey           ContextKey = "refresh_req"
+	UserIDKey               ContextKey = "user_id"
+	UserEmailKey            ContextKey = "user_email"
+	UpdateBlanceReqKey      ContextKey = "update_balance_req"
+	InitiateTransferReqKey  ContextKey = "initiate_transfer_req"
+	ConfirmTransferReqKey   ContextKey = "confirm_transfer_req"
+	CreateTransactionReqKey ContextKey = "create_transaction_req"
+	UpdateTransactionReqKey ContextKey = "update_transaction_req"
 )
 
 // request bodies
@@ -53,6 +58,27 @@ type RefreshReqBody struct {
 
 type UpdateBalanceReqBody struct {
 	Amount int64 `json:"amount"`
+}
+
+type InitiateTransferReqBody struct {
+	Amount   int64  `json:"amount"`
+	ToUserID string `json:"to_user_id"`
+}
+
+type ConfirmTransferReqBody struct {
+	Token string `json:"token"`
+}
+
+// internal requests
+type CreateTransactionReqBody struct {
+	FromUserID string `json:"from_user_id"`
+	ToUserID   string `json:"to_user_id"`
+	Amount     int64  `json:"amount"`
+}
+
+type UpdateTransactionReqBody struct {
+	ID     string                   `json:"id"`
+	Status models.TransactionStatus `json:"status"`
 }
 
 // response

@@ -44,6 +44,7 @@ services:
       - 8082:8080
     environment:
       PORT: "8082"
+      API_URL_TRANSACTION: "http://transaction-service:8083"
       DNS: "postgres://user:password@postgres:5432/accountdb?sslmode=disable&connect_timeout=5"
     depends_on:
       - gateway

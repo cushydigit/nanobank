@@ -18,8 +18,9 @@ import (
 )
 
 var (
-	PORT = os.Getenv("PORT")
-	DNS  = os.Getenv("DNS")
+	PORT                = os.Getenv("PORT")
+	DNS                 = os.Getenv("DNS")
+	API_URL_TRANSACTION = os.Getenv("API_URL_TRANSACTION")
 )
 
 func main() {
@@ -35,7 +36,7 @@ func main() {
 	// create repo
 	r := repository.NewPostgresAccountRepository(db)
 	// create service
-	s := service.NewAccountService(r)
+	s := service.NewAccountService(r, API_URL_TRANSACTION)
 	// create handler
 	h := handler.NewAccountHandler(s)
 
@@ -52,6 +53,8 @@ func main() {
 	m.Post("/", h.Create)
 	m.With(middlewares.ProvideUpdateBalanceReq).Post("/deposit", h.Deposit)
 	m.With(middlewares.ProvideUpdateBalanceReq).Post("/withdraw", h.Withdraw)
+	m.With(middlewares.ProvideInitiateTransferReq).Post("/transfer/initiate", h.InitiateTransfer)
+	m.With(middlewares.ProvideConfirmTransferReq).Post("/transfer/confirm", h.ConfirmTransfer)
 
 	// not allowed and not found handlers
 	m.NotFound(func(w http.ResponseWriter, r *http.Request) {

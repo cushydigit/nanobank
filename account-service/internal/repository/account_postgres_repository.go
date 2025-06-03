@@ -25,9 +25,9 @@ func (r *PostgresAccountRepository) FindByUserID(ctx context.Context, userID str
 	var a models.Account
 	if err := r.DB.QueryRowContext(
 		ctx,
-		`SELECT id, user_id, balance, created_at, updated_at FROM accounts WHERE user_id = $1`,
+		`SELECT id, user_id, username,  balance, created_at, updated_at FROM accounts WHERE user_id = $1`,
 		userID,
-	).Scan(&a.ID, &a.UserID, &a.Balance, &a.CreatedAt, &a.UpdatedAt); err != nil {
+	).Scan(&a.ID, &a.UserID, &a.Username, &a.Balance, &a.CreatedAt, &a.UpdatedAt); err != nil {
 		return nil, err
 	}
 
@@ -37,8 +37,8 @@ func (r *PostgresAccountRepository) FindByUserID(ctx context.Context, userID str
 func (r *PostgresAccountRepository) Create(ctx context.Context, a *models.Account) error {
 	if _, err := r.DB.ExecContext(
 		ctx,
-		`INSERT INTO accounts (id, user_id, balance, created_at, updated_at) VALUES ($1, $2, $3, $4, $5)`,
-		a.ID, a.UserID, a.Balance, a.CreatedAt, a.UpdatedAt,
+		`INSERT INTO accounts (id, user_id, username, balance, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)`,
+		a.ID, a.UserID, a.Username, a.Balance, a.CreatedAt, a.UpdatedAt,
 	); err != nil {
 		return err
 	}

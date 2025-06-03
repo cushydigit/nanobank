@@ -9,6 +9,7 @@ var (
 	ErrInvalidCredentials            = errors.New("invalid credentials")
 	ErrInvalidRefreshToken           = errors.New("invalid refresh token")
 	ErrAccountNotFound               = errors.New("account not found")
+	ErrDestinationAccountNotFound    = errors.New("destination account not found")
 	ErrAccountAlreadyExists          = errors.New("account already exists")
 	ErrTransactionNotFound           = errors.New("transaction not found")
 	ErrAmountMustBePositive          = errors.New("amount must be positive")

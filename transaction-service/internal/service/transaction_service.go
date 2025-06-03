@@ -37,6 +37,7 @@ func (s *TransactionService) ListByUserID(ctx context.Context, userID string) ([
 	return ts, nil
 }
 
+// returns ErrAmountMustBePositive, ErrInternalServer
 func (s *TransactionService) Create(ctx context.Context, fromUserID, toUserID string, amount int64) (*models.Transaction, error) {
 	if amount <= 0 {
 		return nil, myerrors.ErrAmountMustBePositive
