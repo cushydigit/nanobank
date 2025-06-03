@@ -129,7 +129,7 @@ func (s *AccountService) InitiateTransfer(ctx context.Context, fromUserID, toUse
 		if err == sql.ErrNoRows {
 			return nil, nil, myerrors.ErrDestinationAccountNotFound
 		} else {
-			log.Printf("unexpected err: %v")
+			log.Printf("unexpected err: %v", err)
 			return nil, nil, myerrors.ErrInternalServer
 		}
 	}
@@ -153,6 +153,11 @@ func (s *AccountService) InitiateTransfer(ctx context.Context, fromUserID, toUse
 		return nil, nil, myerrors.ErrInternalServer
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusCreated {
+		log.Printf("unexpected status code in creating the trnasaction: %d", resp.StatusCode)
+		return nil, nil, myerrors.ErrInternalServer
+	}
 
 	var res types.Response
 	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
