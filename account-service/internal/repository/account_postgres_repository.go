@@ -64,7 +64,7 @@ func (r *PostgresAccountRepository) TransferAmount(ctx context.Context, fromUser
 	}
 	if _, err = tx.ExecContext(
 		ctx,
-		`UPDATE accounts SET balance = balance - $1 WHREE user_id = $2`,
+		`UPDATE accounts SET balance = balance - $1 WHERE user_id = $2`,
 		amount, fromUserID,
 	); err != nil {
 		tx.Rollback()

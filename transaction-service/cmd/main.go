@@ -54,7 +54,7 @@ func main() {
 	// internal routes
 	m.Get("/internal/{id}", h.GetByID)
 	m.With(middlewares.ProvideCreateTransactionReq).Post("/internal", h.Create)
-	m.With(middlewares.ProvideUpdateTransactionReq).Put("/internal/{id}", h.Update)
+	m.With(middlewares.ProvideUpdateTransactionReq).Post("/internal/{id}", h.Update)
 	// require auth routes
 	m.With(middlewares.RequireRoot).Get("/", h.ListAll)
 	m.Get("/me", h.ListByUserID)

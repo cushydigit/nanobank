@@ -147,7 +147,7 @@ func (s *AccountService) InitiateTransfer(ctx context.Context, fromUserID, toUse
 		return nil, nil, myerrors.ErrInternalServer
 	}
 
-	resp, err := http.Post(fmt.Sprintf("%s/internal/create", s.API_URL_TRANSACTION), "application/json", bytes.NewBuffer(jsonData))
+	resp, err := http.Post(fmt.Sprintf("%s/internal", s.API_URL_TRANSACTION), "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		log.Printf("unexpected err: %v", err)
 		return nil, nil, myerrors.ErrInternalServer
@@ -182,13 +182,13 @@ func (s *AccountService) InitiateTransfer(ctx context.Context, fromUserID, toUse
 
 // returns ErrInternalServer, ErrConfirmationTokenIsNotValid, ErrAccountNotFound, ErrDestinationAccountNotFound, ErrInsufficientBalance
 func (s *AccountService) ConfirmTransfer(ctx context.Context, txID, token string) error {
-	resp, err := http.Get(fmt.Sprintf("%s/%s", s.API_URL_TRANSACTION, txID))
+	resp, err := http.Get(fmt.Sprintf("%s/internal/%s", s.API_URL_TRANSACTION, txID))
 	if err != nil {
 		log.Printf("unexpected err: %v", err)
 		return myerrors.ErrInternalServer
 	}
 	if resp.StatusCode != http.StatusOK {
-		log.Printf("unexpected status code: %d", resp.StatusCode)
+		log.Printf("unexpected status code in getting the transaction: %d", resp.StatusCode)
 	}
 	defer resp.Body.Close()
 	var res types.Response
@@ -257,7 +257,7 @@ func (s *AccountService) ConfirmTransfer(ctx context.Context, txID, token string
 		return myerrors.ErrInternalServer
 	}
 
-	resp, err = http.Post(fmt.Sprintf("%s/internal/update", s.API_URL_TRANSACTION), "application/json", bytes.NewBuffer(jsonData))
+	resp, err = http.Post(fmt.Sprintf("%s/internal/%s", s.API_URL_TRANSACTION, t.ID), "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		log.Printf("unexpected err: %v", err)
 		return myerrors.ErrInternalServer
