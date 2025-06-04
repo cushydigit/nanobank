@@ -1,7 +1,6 @@
 package service
 
 import (
-	"bytes"
 	"context"
 	"database/sql"
 	"encoding/json"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/cushydigit/nanobank/account-service/internal/repository"
 	myerrors "github.com/cushydigit/nanobank/shared/errors"
+	"github.com/cushydigit/nanobank/shared/internalhttp"
 	"github.com/cushydigit/nanobank/shared/models"
 	"github.com/cushydigit/nanobank/shared/types"
 )
@@ -141,26 +141,10 @@ func (s *AccountService) InitiateTransfer(ctx context.Context, fromUserID, toUse
 		Amount:     amount,
 	}
 
-	jsonData, err := json.Marshal(body)
-	if err != nil {
-		log.Printf("unexpected err: %v", err)
-		return nil, nil, myerrors.ErrInternalServer
-	}
+	res := types.Response{}
+	url := fmt.Sprintf("%s/internal", s.API_URL_TRANSACTION)
 
-	resp, err := http.Post(fmt.Sprintf("%s/internal", s.API_URL_TRANSACTION), "application/json", bytes.NewBuffer(jsonData))
-	if err != nil {
-		log.Printf("unexpected err: %v", err)
-		return nil, nil, myerrors.ErrInternalServer
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusCreated {
-		log.Printf("unexpected status code in creating the trnasaction: %d", resp.StatusCode)
-		return nil, nil, myerrors.ErrInternalServer
-	}
-
-	var res types.Response
-	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
+	if err := internalhttp.DoJSON(ctx, http.MethodPost, url, body, &res); err != nil {
 		log.Printf("unexpected err: %v", err)
 		return nil, nil, myerrors.ErrInternalServer
 	}
@@ -182,17 +166,9 @@ func (s *AccountService) InitiateTransfer(ctx context.Context, fromUserID, toUse
 
 // returns ErrInternalServer, ErrConfirmationTokenIsNotValid, ErrAccountNotFound, ErrDestinationAccountNotFound, ErrInsufficientBalance
 func (s *AccountService) ConfirmTransfer(ctx context.Context, txID, token string) error {
-	resp, err := http.Get(fmt.Sprintf("%s/internal/%s", s.API_URL_TRANSACTION, txID))
-	if err != nil {
-		log.Printf("unexpected err: %v", err)
-		return myerrors.ErrInternalServer
-	}
-	if resp.StatusCode != http.StatusOK {
-		log.Printf("unexpected status code in getting the transaction: %d", resp.StatusCode)
-	}
-	defer resp.Body.Close()
-	var res types.Response
-	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
+	res := types.Response{}
+	url := fmt.Sprintf("%s/internal/%s", s.API_URL_TRANSACTION, txID)
+	if err := internalhttp.DoJSON(ctx, http.MethodGet, url, nil, &res); err != nil {
 		log.Printf("unexpected err: %v", err)
 		return myerrors.ErrInternalServer
 	}
@@ -250,22 +226,9 @@ func (s *AccountService) ConfirmTransfer(ctx context.Context, txID, token string
 		ID:     t.ID,
 		Status: models.StatusConfirmed,
 	}
-
-	jsonData, err := json.Marshal(body)
-	if err != nil {
+	url = fmt.Sprintf("%s/internal/%s", s.API_URL_TRANSACTION, t.ID)
+	if err := internalhttp.DoJSON(ctx, http.MethodPut, url, body, &res); err != nil {
 		log.Printf("unexpected err: %v", err)
-		return myerrors.ErrInternalServer
-	}
-
-	resp, err = http.Post(fmt.Sprintf("%s/internal/%s", s.API_URL_TRANSACTION, t.ID), "application/json", bytes.NewBuffer(jsonData))
-	if err != nil {
-		log.Printf("unexpected err: %v", err)
-		return myerrors.ErrInternalServer
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		log.Printf("unexpected status code: %d", resp.StatusCode)
 		return myerrors.ErrInternalServer
 	}
 
