@@ -44,6 +44,7 @@ func ProxyHandler(target, block string) http.HandlerFunc {
 		// block routes
 		if strings.HasPrefix(strings.ToLower(r.URL.Path), block) {
 			helpers.ErrorJSON(w, errors.New("forbidden"), http.StatusForbidden)
+			return
 		}
 		r.Host = url.Host
 		proxy.ServeHTTP(w, r)
