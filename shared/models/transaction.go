@@ -16,7 +16,7 @@ const (
 )
 
 type Transaction struct {
-	ID                string            `json:"id"`
+	ID                string            `json:"tx_id"`
 	FromUserID        string            `json:"from_user_id"`
 	ToUserID          string            `json:"to_user_id"`
 	Amount            int64             `json:"amount"`

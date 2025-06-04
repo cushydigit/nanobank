@@ -59,6 +59,7 @@ func ProvideConfirmTransferReq(next http.Handler) http.Handler {
 
 		if req.Token == "" {
 			helpers.ErrorJSON(w, myerrors.ErrInvalidRequest)
+			return
 		}
 
 		ctx := context.WithValue(r.Context(), types.ConfirmTransferReqKey, req)

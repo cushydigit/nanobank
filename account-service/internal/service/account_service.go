@@ -180,6 +180,99 @@ func (s *AccountService) InitiateTransfer(ctx context.Context, fromUserID, toUse
 	return to, &t, nil
 }
 
-func (s *AccountService) ConfirmTransfer(ctx context.Context) error {
+// returns ErrInternalServer, ErrConfirmationTokenIsNotValid, ErrAccountNotFound, ErrDestinationAccountNotFound, ErrInsufficientBalance
+func (s *AccountService) ConfirmTransfer(ctx context.Context, txID, token string) error {
+	resp, err := http.Get(fmt.Sprintf("%s/%s", s.API_URL_TRANSACTION, txID))
+	if err != nil {
+		log.Printf("unexpected err: %v", err)
+		return myerrors.ErrInternalServer
+	}
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("unexpected status code: %d", resp.StatusCode)
+	}
+	defer resp.Body.Close()
+	var res types.Response
+	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
+		log.Printf("unexpected err: %v", err)
+		return myerrors.ErrInternalServer
+	}
+
+	dataBytes, err := json.Marshal(res.Data)
+	if err != nil {
+		log.Printf("unexpected err: %v", err)
+		return myerrors.ErrInternalServer
+	}
+
+	var t models.Transaction
+	if err := json.Unmarshal(dataBytes, &t); err != nil {
+		log.Printf("unexpected err: %v", err)
+		return myerrors.ErrInternalServer
+	}
+
+	// check if transaction already has some other status
+	if t.Status != models.StatusPending {
+		return myerrors.ErrConfirmationTokenIsNotValid
+	}
+
+	// TODO chekc if the casher has this value (is not expired)
+
+	// check if token and txID is the same
+	if token != t.ConfirmationToken {
+		return myerrors.ErrConfirmationTokenIsNotValid
+	}
+
+	// check the source account
+	sa, err := s.repo.FindByUserID(ctx, t.FromUserID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return myerrors.ErrAccountNotFound
+		}
+		log.Printf("unexpected err: %v", err)
+		return myerrors.ErrInternalServer
+	}
+
+	// check the balance of source account
+	if sa.Balance < t.Amount {
+		return myerrors.ErrInsufficientBalance
+	}
+
+	// check the destination account
+	_, err = s.repo.FindByUserID(ctx, t.ToUserID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return myerrors.ErrDestinationAccountNotFound
+		}
+		log.Printf("unexpected err: %v", err)
+		return myerrors.ErrInternalServer
+	}
+
+	body := types.UpdateTransactionReqBody{
+		ID:     t.ID,
+		Status: models.StatusConfirmed,
+	}
+
+	jsonData, err := json.Marshal(body)
+	if err != nil {
+		log.Printf("unexpected err: %v", err)
+		return myerrors.ErrInternalServer
+	}
+
+	resp, err = http.Post(fmt.Sprintf("%s/internal/update", s.API_URL_TRANSACTION), "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		log.Printf("unexpected err: %v", err)
+		return myerrors.ErrInternalServer
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("unexpected status code: %d", resp.StatusCode)
+		return myerrors.ErrInternalServer
+	}
+
+	if err := s.repo.TransferAmount(ctx, t.FromUserID, t.ToUserID, t.Amount); err != nil {
+		log.Printf("unexpected err: %v", err)
+		return myerrors.ErrInternalServer
+	}
+
 	return nil
 }

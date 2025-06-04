@@ -21,6 +21,7 @@ var (
 	ErrInvalidOrExpiredToken         = errors.New("invalid or expired token")
 	ErrPermissionDenied              = errors.New("permission denied")
 	ErrContextValueNotFoundInRequest = errors.New("object not found in context of request")
+	ErrConfirmationTokenIsNotValid   = errors.New("confirmation token expired or not valid")
 	ErrJWTEmptyToken                 = errors.New("empty token")
 	ErrJWTFailedToParseToken         = errors.New("failed to parse token")
 	ErrJWTTokenClaimsTypeMismatch    = errors.New("token claims type mismatch")

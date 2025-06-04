@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"log"
 	"time"
 
@@ -17,6 +18,20 @@ type TransactionService struct {
 
 func NewTransactionService(r repository.TransactionRepository) *TransactionService {
 	return &TransactionService{repo: r}
+}
+
+// returns ErrTransactionNotFound, ErrInternalServer
+func (s *TransactionService) GetByID(ctx context.Context, id string) (*models.Transaction, error) {
+	t, err := s.repo.FindByID(ctx, id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, myerrors.ErrTransactionNotFound
+		}
+		log.Printf("unexpected err: %v", err)
+		return nil, myerrors.ErrInternalServer
+	}
+
+	return t, nil
 }
 
 func (s *TransactionService) ListAll(ctx context.Context) ([]*models.Transaction, error) {
@@ -55,16 +70,21 @@ func (s *TransactionService) Create(ctx context.Context, fromUserID, toUserID st
 	return t, nil
 }
 
-func (s *TransactionService) Update(ctx context.Context, id string, status models.TransactionStatus) error {
+// returns ErrTransactionNotFound, ErrInternalServer
+func (s *TransactionService) Update(ctx context.Context, id string, status models.TransactionStatus) (*models.Transaction, error) {
 	t, err := s.repo.FindByID(ctx, id)
 	if err != nil {
-		return myerrors.ErrTransactionNotFound
+		if err == sql.ErrNoRows {
+			return nil, myerrors.ErrTransactionNotFound
+		}
+		log.Printf("unexpected err: %v", err)
+		return nil, myerrors.ErrInternalServer
 	}
 	t.UpdatedAt = time.Now().UTC()
 	t.Status = status
 	if err := s.repo.Update(ctx, t); err != nil {
-		log.Printf("unexpected err: %v")
-		return myerrors.ErrTransactionNotFound
+		log.Printf("unexpected err: %v", err)
+		return nil, myerrors.ErrInternalServer
 	}
-	return nil
+	return t, nil
 }

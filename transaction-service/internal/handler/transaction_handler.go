@@ -8,6 +8,7 @@ import (
 	"github.com/cushydigit/nanobank/shared/helpers"
 	"github.com/cushydigit/nanobank/shared/types"
 	"github.com/cushydigit/nanobank/transaction-service/internal/service"
+	"github.com/go-chi/chi/v5"
 )
 
 type TransactionHandler struct {
@@ -45,16 +46,49 @@ func (h *TransactionHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TransactionHandler) Update(w http.ResponseWriter, r *http.Request) {
-	_, ok := r.Context().Value(types.UpdateTransactionReqKey).(types.UpdateTransactionReqBody)
+	req, ok := r.Context().Value(types.UpdateTransactionReqKey).(types.UpdateTransactionReqBody)
 	if !ok {
 		helpers.ErrorJSON(w, myerrors.ErrContextValueNotFoundInRequest, http.StatusInternalServerError)
 		return
 	}
 
+	t, err := h.service.Update(r.Context(), req.ID, req.Status)
+	if err != nil {
+		if err == myerrors.ErrTransactionNotFound {
+			helpers.ErrorJSON(w, err, http.StatusNotFound)
+			return
+		}
+		helpers.ErrorJSON(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	payload := types.Response{
+		Error:   false,
+		Message: "success",
+		Data:    t,
+	}
+
+	helpers.WriteJSON(w, http.StatusOK, payload)
 }
 
 func (h *TransactionHandler) GetByID(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	t, err := h.service.GetByID(r.Context(), id)
+	if err != nil {
+		if err == myerrors.ErrTransactionNotFound {
+			helpers.ErrorJSON(w, err, http.StatusNotFound)
+			return
+		}
+		helpers.ErrorJSON(w, err, http.StatusInternalServerError)
+		return
+	}
 
+	payload := types.Response{
+		Error:   false,
+		Message: "success",
+		Data:    t,
+	}
+	helpers.WriteJSON(w, http.StatusOK, payload)
 }
 
 func (h *TransactionHandler) ListByUserID(w http.ResponseWriter, r *http.Request) {

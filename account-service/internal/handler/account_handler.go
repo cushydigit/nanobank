@@ -167,6 +167,7 @@ func (h *AccountHandler) InitiateTransfer(w http.ResponseWriter, r *http.Request
 			"confirmation_token": t.ConfirmationToken,
 			"to_account_number":  destinationAccount.ID,
 			"to_username":        destinationAccount.Username,
+			"tx_id":              t.ID,
 		},
 	}
 
@@ -175,4 +176,42 @@ func (h *AccountHandler) InitiateTransfer(w http.ResponseWriter, r *http.Request
 
 func (h *AccountHandler) ConfirmTransfer(w http.ResponseWriter, r *http.Request) {
 	// _ := r.Header.Get(string(types.XUserID))
+	req, ok := r.Context().Value(types.ConfirmTransferReqKey).(types.ConfirmTransferReqBody)
+	if !ok {
+		helpers.ErrorJSON(w, myerrors.ErrContextValueNotFoundInRequest, http.StatusInternalServerError)
+		return
+	}
+
+	if err := h.service.ConfirmTransfer(r.Context(), req.TxID, req.Token); err != nil {
+		if err == myerrors.ErrAccountNotFound {
+			helpers.ErrorJSON(w, err, http.StatusNotFound)
+			return
+		}
+		if err == myerrors.ErrDestinationAccountNotFound {
+			helpers.ErrorJSON(w, err, http.StatusNotFound)
+			return
+		}
+		if err == myerrors.ErrAmountMustBePositive {
+			helpers.ErrorJSON(w, err)
+			return
+		}
+		if err == myerrors.ErrInsufficientBalance {
+			helpers.ErrorJSON(w, err, http.StatusUnprocessableEntity)
+			return
+		}
+		if err == myerrors.ErrConfirmationTokenIsNotValid {
+			helpers.ErrorJSON(w, err, http.StatusNotAcceptable)
+			return
+		}
+		helpers.ErrorJSON(w, myerrors.ErrInternalServer, http.StatusInternalServerError)
+		return
+	}
+
+	payload := types.Response{
+		Error:   false,
+		Message: "success",
+		Data:    nil,
+	}
+
+	helpers.WriteJSON(w, http.StatusAccepted, payload)
 }

@@ -11,6 +11,7 @@ type AccountRepository interface {
 	FindByUserID(ctx context.Context, userID string) (*models.Account, error)
 	Create(ctx context.Context, account *models.Account) error
 	UpdateBalance(ctx context.Context, userID string, amount int64) error
+	TransferAmount(ctx context.Context, fromUserID string, toUserID string, amount int64) error
 }
 
 type PostgresAccountRepository struct {
@@ -54,4 +55,30 @@ func (r *PostgresAccountRepository) UpdateBalance(ctx context.Context, userID st
 		return err
 	}
 	return nil
+}
+
+func (r *PostgresAccountRepository) TransferAmount(ctx context.Context, fromUserID, toUserID string, amount int64) error {
+	tx, err := r.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	if _, err = tx.ExecContext(
+		ctx,
+		`UPDATE accounts SET balance = balance - $1 WHREE user_id = $2`,
+		amount, fromUserID,
+	); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if _, err = tx.ExecContext(
+		ctx,
+		`UPDATE accounts SET balance = balance + $1 WHERE user_id = $2`,
+		amount, toUserID,
+	); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit()
 }

@@ -53,6 +53,7 @@ func main() {
 	m.Get("/", h.List)
 	m.With(middlewares.ProvideCreateTransactionReq).Post("/internal/create", h.Create)
 	m.With(middlewares.ProvideUpdateTransactionReq).Post("/internal/update", h.Create)
+	m.Get("/{id}", h.GetByID)
 
 	// not allowed and not found handlers
 	m.NotFound(func(w http.ResponseWriter, r *http.Request) {
