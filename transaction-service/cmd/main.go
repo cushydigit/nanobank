@@ -20,8 +20,9 @@ import (
 )
 
 var (
-	PORT = os.Getenv("PORT")
-	DNS  = os.Getenv("DNS")
+	PORT       = os.Getenv("PORT")
+	DNS        = os.Getenv("DNS")
+	ROOT_EMAIL = os.Getenv("ROOT_EMAIL")
 )
 
 func main() {
@@ -50,10 +51,13 @@ func main() {
 	m.Use(middleware.Heartbeat("/ping"))
 
 	// setup routes
-	m.Get("/", h.List)
-	m.With(middlewares.ProvideCreateTransactionReq).Post("/internal/create", h.Create)
-	m.With(middlewares.ProvideUpdateTransactionReq).Post("/internal/update", h.Create)
-	m.Get("/{id}", h.GetByID)
+	// internal routes
+	m.Get("/internal/{id}", h.GetByID)
+	m.With(middlewares.ProvideCreateTransactionReq).Post("/internal", h.Create)
+	m.With(middlewares.ProvideUpdateTransactionReq).Put("/internal/{id}", h.Update)
+	// require auth routes
+	m.With(middlewares.RequireRoot).Get("/", h.ListAll)
+	m.Get("/me", h.ListByUserID)
 
 	// not allowed and not found handlers
 	m.NotFound(func(w http.ResponseWriter, r *http.Request) {

@@ -128,9 +128,9 @@ func RequireRoot(next http.Handler) http.Handler {
 			log.Fatalf("wrong environment variable for require root middleware")
 		}
 
-		email, ok := r.Context().Value(types.UserEmailKey).(string)
-		if !ok {
-			log.Fatalf("the require root middleware must come after the require auth middleware")
+		email := r.Header.Get(string(types.XUserEmail))
+		if email == "" {
+			log.Fatalf("root middleware require auth middleware at the upstream")
 		}
 
 		if email != ROOT_EMAIL {

@@ -49,8 +49,8 @@ func Routes() http.Handler {
 		})
 
 		// transaction service
-		r.With(middlewares.RequireAuth, middlewares.RequireRoot).Route("/transaction", func(r chi.Router) {
-			r.Mount("/", http.StripPrefix("/api/transction", utils.ProxyHandler(API_URL_TRANSACTION)))
+		r.With(middlewares.RequireAuth).Route("/transaction", func(r chi.Router) {
+			r.Mount("/", http.StripPrefix("/api/transaction", utils.ProxyHandler(API_URL_TRANSACTION)))
 		})
 	})
 

@@ -34,6 +34,7 @@ func (s *TransactionService) GetByID(ctx context.Context, id string) (*models.Tr
 	return t, nil
 }
 
+// returns ErrInternalServer
 func (s *TransactionService) ListAll(ctx context.Context) ([]*models.Transaction, error) {
 	ts, err := s.repo.FindAll(ctx)
 	if err != nil {
@@ -43,6 +44,7 @@ func (s *TransactionService) ListAll(ctx context.Context) ([]*models.Transaction
 	return ts, nil
 }
 
+// reutrns ErrInternalServer
 func (s *TransactionService) ListByUserID(ctx context.Context, userID string) ([]*models.Transaction, error) {
 	ts, err := s.repo.FindAllByUserID(ctx, userID)
 	if err != nil {

@@ -59,6 +59,7 @@ services:
       - 8083:8080
     environment:
       PORT: "8083"
+      ROOT_EMAIL: "admin@nanobank.com"
       DNS: "postgres://user:password@postgres:5432/transactiondb?sslmode=disable&connect_timeout=5"
     depends_on:
       - gateway

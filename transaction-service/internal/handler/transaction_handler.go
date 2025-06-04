@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"errors"
+	"log"
 	"net/http"
 
 	myerrors "github.com/cushydigit/nanobank/shared/errors"
@@ -92,10 +92,35 @@ func (h *TransactionHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TransactionHandler) ListByUserID(w http.ResponseWriter, r *http.Request) {
+	userID := r.Header.Get(string(types.XUserID))
+	if userID == "" {
+		log.Fatalf("the userID header not set")
+	}
+	ts, err := h.service.ListByUserID(r.Context(), userID)
+	if err != nil {
+		helpers.ErrorJSON(w, myerrors.ErrInternalServer)
+		return
+	}
+	payload := types.Response{
+		Error:   false,
+		Message: "success",
+		Data:    ts,
+	}
 
+	helpers.WriteJSON(w, http.StatusOK, payload)
 }
 
-func (t *TransactionHandler) List(w http.ResponseWriter, r *http.Request) {
-	helpers.ErrorJSON(w, errors.New("not implemented yet"))
-	return
+func (h *TransactionHandler) ListAll(w http.ResponseWriter, r *http.Request) {
+	ts, err := h.service.ListAll(r.Context())
+	if err != nil {
+		helpers.ErrorJSON(w, myerrors.ErrInternalServer)
+		return
+	}
+	payload := types.Response{
+		Error:   false,
+		Message: "success",
+		Data:    ts,
+	}
+
+	helpers.WriteJSON(w, http.StatusOK, payload)
 }
