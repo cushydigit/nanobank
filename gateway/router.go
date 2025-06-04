@@ -47,6 +47,11 @@ func Routes() http.Handler {
 		r.With(middlewares.RequireAuth).Route("/account", func(r chi.Router) {
 			r.Mount("/", http.StripPrefix("/api/account", utils.ProxyHandler(API_URL_ACCOUNT)))
 		})
+
+		// transaction service
+		r.With(middlewares.RequireAuth, middlewares.RequireRoot).Route("/transaction", func(r chi.Router) {
+			r.Mount("/", http.StripPrefix("/api/transction", utils.ProxyHandler(API_URL_TRANSACTION)))
+		})
 	})
 
 	// not allowed and not found handlers
