@@ -1,11 +1,15 @@
 package utils
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"regexp"
+	"strings"
 
+	"github.com/cushydigit/nanobank/shared/helpers"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -32,12 +36,25 @@ func IsValidUsername(username string) bool {
 	return re.MatchString(username)
 }
 
-func ProxyHandler(target string) http.HandlerFunc {
+func ProxyHandler(target, block string) http.HandlerFunc {
 	url, _ := url.Parse(target)
 	proxy := httputil.NewSingleHostReverseProxy(url)
 
 	return func(w http.ResponseWriter, r *http.Request) {
+		// block routes
+		if strings.HasPrefix(strings.ToLower(r.URL.Path), block) {
+			helpers.ErrorJSON(w, errors.New("forbidden"), http.StatusForbidden)
+			return
+		}
 		r.Host = url.Host
 		proxy.ServeHTTP(w, r)
 	}
+}
+
+func GenerateTransactionToken() (string, error) {
+	uid, err := uuid.NewV7()
+	if err != nil {
+		return "", err
+	}
+	return uid.String(), nil
 }

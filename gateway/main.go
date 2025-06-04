@@ -12,15 +12,16 @@ import (
 )
 
 var (
-	PORT            = os.Getenv("PORT")
-	API_URL_AUTH    = os.Getenv("API_URL_AUTH")
-	API_URL_ACCOUNT = os.Getenv("API_URL_ACCOUNT")
-	API_URL_REDIS   = os.Getenv("API_URL_REDIS")
+	PORT                = os.Getenv("PORT")
+	API_URL_AUTH        = os.Getenv("API_URL_AUTH")
+	API_URL_ACCOUNT     = os.Getenv("API_URL_ACCOUNT")
+	API_URL_TRANSACTION = os.Getenv("API_URL_TRANSACTION")
+	API_URL_REDIS       = os.Getenv("API_URL_REDIS")
 )
 
 func main() {
 
-	if PORT == "" || API_URL_AUTH == "" || API_URL_REDIS == "" {
+	if PORT == "" || API_URL_AUTH == "" || API_URL_REDIS == "" || API_URL_ACCOUNT == "" || API_URL_TRANSACTION == "" {
 		log.Fatal("wrong environment variable")
 	}
 

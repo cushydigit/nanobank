@@ -10,16 +10,18 @@ import (
 type Account struct {
 	ID        string    `json:"id"`
 	UserID    string    `json:"user_id"`
+	Username  string    `json:"username"`
 	Balance   int64     `json:"balance"` // fixed scale (cents)
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-func NewAccount(UserID string) *Account {
+func NewAccount(userID, username string) *Account {
 	id := generateAccountNumber("NBA")
 	return &Account{
 		ID:        id,
-		UserID:    UserID,
+		UserID:    userID,
+		Username:  username,
 		Balance:   0,
 		CreatedAt: time.Now().UTC(),
 		UpdatedAt: time.Now().UTC(),

@@ -40,12 +40,17 @@ func Routes() http.Handler {
 	m.Route("/api", func(r chi.Router) {
 		// auth service
 		r.Route("/auth", func(r chi.Router) {
-			r.Mount("/", http.StripPrefix("/api/auth", utils.ProxyHandler(API_URL_AUTH)))
+			r.Mount("/", http.StripPrefix("/api/auth", utils.ProxyHandler(API_URL_AUTH, "/internal")))
 		})
 
 		// account service
 		r.With(middlewares.RequireAuth).Route("/account", func(r chi.Router) {
-			r.Mount("/", http.StripPrefix("/api/account", utils.ProxyHandler(API_URL_ACCOUNT)))
+			r.Mount("/", http.StripPrefix("/api/account", utils.ProxyHandler(API_URL_ACCOUNT, "/internal")))
+		})
+
+		// transaction service
+		r.With(middlewares.RequireAuth).Route("/transaction", func(r chi.Router) {
+			r.Mount("/", http.StripPrefix("/api/transaction", utils.ProxyHandler(API_URL_TRANSACTION, "/internal")))
 		})
 	})
 

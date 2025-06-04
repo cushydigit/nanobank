@@ -7,20 +7,22 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/cushydigit/nanobank/account-service/internal/handler"
-	"github.com/cushydigit/nanobank/account-service/internal/repository"
-	"github.com/cushydigit/nanobank/account-service/internal/service"
 	"github.com/cushydigit/nanobank/shared/database"
 	"github.com/cushydigit/nanobank/shared/helpers"
 	"github.com/cushydigit/nanobank/shared/middlewares"
+
+	"github.com/cushydigit/nanobank/transaction-service/internal/handler"
+	"github.com/cushydigit/nanobank/transaction-service/internal/repository"
+	"github.com/cushydigit/nanobank/transaction-service/internal/service"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
 
 var (
-	PORT                = os.Getenv("PORT")
-	DNS                 = os.Getenv("DNS")
-	API_URL_TRANSACTION = os.Getenv("API_URL_TRANSACTION")
+	PORT       = os.Getenv("PORT")
+	DNS        = os.Getenv("DNS")
+	ROOT_EMAIL = os.Getenv("ROOT_EMAIL")
 )
 
 func main() {
@@ -34,11 +36,11 @@ func main() {
 	db := database.ConnectDB(DNS)
 
 	// create repo
-	r := repository.NewPostgresAccountRepository(db)
+	r := repository.NewPostgresTransactionRepository(db)
 	// create service
-	s := service.NewAccountService(r, API_URL_TRANSACTION)
+	s := service.NewTransactionService(r)
 	// create handler
-	h := handler.NewAccountHandler(s)
+	h := handler.NewTransactionHandler(s)
 
 	// create router mux
 	m := chi.NewRouter()
@@ -49,12 +51,13 @@ func main() {
 	m.Use(middleware.Heartbeat("/ping"))
 
 	// setup routes
-	m.Get("/", h.Get)
-	m.Post("/", h.Create)
-	m.With(middlewares.ProvideUpdateBalanceReq).Post("/deposit", h.Deposit)
-	m.With(middlewares.ProvideUpdateBalanceReq).Post("/withdraw", h.Withdraw)
-	m.With(middlewares.ProvideInitiateTransferReq).Post("/transfer/initiate", h.InitiateTransfer)
-	m.With(middlewares.ProvideConfirmTransferReq).Post("/transfer/confirm", h.ConfirmTransfer)
+	// internal routes
+	m.Get("/internal/{id}", h.GetByID)
+	m.With(middlewares.ProvideCreateTransactionReq).Post("/internal", h.Create)
+	m.With(middlewares.ProvideUpdateTransactionReq).Put("/internal/{id}", h.Update)
+	// require auth routes
+	m.With(middlewares.RequireRoot).Get("/", h.ListAll)
+	m.Get("/me", h.ListByUserID)
 
 	// not allowed and not found handlers
 	m.NotFound(func(w http.ResponseWriter, r *http.Request) {
