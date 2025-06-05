@@ -8,15 +8,17 @@ import (
 
 	myerrors "github.com/cushydigit/nanobank/shared/errors"
 	"github.com/cushydigit/nanobank/shared/models"
+	"github.com/cushydigit/nanobank/shared/redis"
 	"github.com/cushydigit/nanobank/shared/utils"
 	"github.com/cushydigit/nanobank/transaction-service/internal/repository"
 )
 
 type TransactionService struct {
-	repo repository.TransactionRepository
+	repo        repository.TransactionRepository
+	tokenCacher redis.TokenCacher
 }
 
-func NewTransactionService(r repository.TransactionRepository) *TransactionService {
+func NewTransactionService(r repository.TransactionRepository, c redis.TokenCacher) *TransactionService {
 	return &TransactionService{repo: r}
 }
 
@@ -51,7 +53,17 @@ func (s *TransactionService) ListByUserID(ctx context.Context, userID string) ([
 		log.Printf("unexpected err: %v", err)
 		return nil, myerrors.ErrInternalServer
 	}
-	return ts, nil
+	var filteredTs []*models.Transaction
+	for _, t := range ts {
+		if t.FromUserID == userID {
+			filteredTs = append(filteredTs, t)
+		} else {
+			if t.Status == models.StatusConfirmed {
+				filteredTs = append(filteredTs, t)
+			}
+		}
+	}
+	return filteredTs, nil
 }
 
 // returns ErrAmountMustBePositive, ErrInternalServer
@@ -64,11 +76,13 @@ func (s *TransactionService) Create(ctx context.Context, fromUserID, toUserID st
 		log.Printf("unexpected err: %v", err)
 		return nil, myerrors.ErrInternalServer
 	}
+
 	t := models.NewTransaction(fromUserID, toUserID, token, amount)
 	if err := s.repo.Create(ctx, t); err != nil {
 		log.Printf("unexpected err: %v", err)
 		return nil, myerrors.ErrInternalServer
 	}
+
 	return t, nil
 }
 

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -13,6 +14,7 @@ import (
 	"github.com/cushydigit/nanobank/shared/database"
 	"github.com/cushydigit/nanobank/shared/helpers"
 	"github.com/cushydigit/nanobank/shared/middlewares"
+	myredis "github.com/cushydigit/nanobank/shared/redis"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
@@ -21,14 +23,20 @@ var (
 	PORT                = os.Getenv("PORT")
 	DNS                 = os.Getenv("DNS")
 	API_URL_TRANSACTION = os.Getenv("API_URL_TRANSACTION")
+	API_URL_REDIS       = os.Getenv("API_URL_REDIS")
 )
 
 func main() {
 
+	ctx := context.Background()
+
 	// check environment variables
-	if PORT == "" || DNS == "" {
+	if PORT == "" || DNS == "" || API_URL_TRANSACTION == "" || API_URL_REDIS == "" {
 		log.Fatal("wrong environment variable")
 	}
+
+	// init redis (cacher) client
+	c := myredis.MyRedisClientInit(ctx, API_URL_REDIS)
 
 	// connect DB
 	db := database.ConnectDB(DNS)
@@ -36,7 +44,7 @@ func main() {
 	// create repo
 	r := repository.NewPostgresAccountRepository(db)
 	// create service
-	s := service.NewAccountService(r, API_URL_TRANSACTION)
+	s := service.NewAccountService(r, c, API_URL_TRANSACTION)
 	// create handler
 	h := handler.NewAccountHandler(s)
 

@@ -46,6 +46,7 @@ services:
     environment:
       PORT: "8082"
       API_URL_TRANSACTION: "http://transaction-service:8083"
+      API_URL_REDIS: "redis:6379"
       DNS: "postgres://user:password@postgres:5432/accountdb?sslmode=disable&connect_timeout=5"
     depends_on:
       - gateway
@@ -60,6 +61,7 @@ services:
     environment:
       PORT: "8083"
       ROOT_EMAIL: "admin@nanobank.com"
+      API_URL_REDIS: "redis:6379"
       DNS: "postgres://user:password@postgres:5432/transactiondb?sslmode=disable&connect_timeout=5"
     depends_on:
       - gateway

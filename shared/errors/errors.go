@@ -3,6 +3,7 @@ package errors
 import "errors"
 
 var (
+	ErrSelfTransder                  = errors.New("source and destination cannot be the same")
 	ErrDuplicateEmail                = errors.New("email already exists")
 	ErrUserNotFound                  = errors.New("user not found")
 	ErrInternalServer                = errors.New("internal server error")

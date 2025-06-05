@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -10,6 +11,7 @@ import (
 	"github.com/cushydigit/nanobank/shared/database"
 	"github.com/cushydigit/nanobank/shared/helpers"
 	"github.com/cushydigit/nanobank/shared/middlewares"
+	myredis "github.com/cushydigit/nanobank/shared/redis"
 
 	"github.com/cushydigit/nanobank/transaction-service/internal/handler"
 	"github.com/cushydigit/nanobank/transaction-service/internal/repository"
@@ -20,25 +22,31 @@ import (
 )
 
 var (
-	PORT       = os.Getenv("PORT")
-	DNS        = os.Getenv("DNS")
-	ROOT_EMAIL = os.Getenv("ROOT_EMAIL")
+	PORT          = os.Getenv("PORT")
+	DNS           = os.Getenv("DNS")
+	ROOT_EMAIL    = os.Getenv("ROOT_EMAIL")
+	API_URL_REDIS = os.Getenv("API_URL_REDIS")
 )
 
 func main() {
 
+	ctx := context.Background()
+
 	// check environment variables
-	if PORT == "" || DNS == "" {
+	if PORT == "" || DNS == "" || ROOT_EMAIL == "" || API_URL_REDIS == "" {
 		log.Fatal("wrong environment variable")
 	}
 
 	// connect DB
 	db := database.ConnectDB(DNS)
 
+	// init redis (cacher) client
+	c := myredis.MyRedisClientInit(ctx, API_URL_REDIS)
+
 	// create repo
 	r := repository.NewPostgresTransactionRepository(db)
 	// create service
-	s := service.NewTransactionService(r)
+	s := service.NewTransactionService(r, c)
 	// create handler
 	h := handler.NewTransactionHandler(s)
 

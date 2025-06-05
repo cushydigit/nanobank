@@ -66,7 +66,6 @@ type InitiateTransferReqBody struct {
 }
 
 type ConfirmTransferReqBody struct {
-	TxID  string `json:"tx_id"`
 	Token string `json:"token"`
 }
 

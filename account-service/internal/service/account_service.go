@@ -12,17 +12,20 @@ import (
 	myerrors "github.com/cushydigit/nanobank/shared/errors"
 	"github.com/cushydigit/nanobank/shared/internalhttp"
 	"github.com/cushydigit/nanobank/shared/models"
+	"github.com/cushydigit/nanobank/shared/redis"
 	"github.com/cushydigit/nanobank/shared/types"
 )
 
 type AccountService struct {
 	repo                repository.AccountRepository
+	tokenCacher         redis.TokenCacher
 	API_URL_TRANSACTION string
 }
 
-func NewAccountService(r repository.AccountRepository, url string) *AccountService {
+func NewAccountService(r repository.AccountRepository, c redis.TokenCacher, url string) *AccountService {
 	return &AccountService{
 		repo:                r,
+		tokenCacher:         c,
 		API_URL_TRANSACTION: url,
 	}
 }
@@ -100,37 +103,41 @@ func (s *AccountService) Withdraw(ctx context.Context, userID string, amount int
 	return nil
 }
 
-// returns toAccount (desitination account user) and a transaction with pending, errs: ErrAmountMustBePositive, ErrInsufficientBalance, ErrAccountNotFound, ErrDestinationAccountNotFound, ErrInternalServer
-func (s *AccountService) InitiateTransfer(ctx context.Context, fromUserID, toUserID string, amount int64) (*models.Account, *models.Transaction, error) {
+// returns toAccount (desitination account user) and a transaction with pending, errs: ErrAmountMustBePositive, ErrInsufficientBalance, ErrAccountNotFound, ErrDestinationAccountNotFound, ErrInternalServer, ErrSelfTransder
+func (s *AccountService) InitiateTransfer(ctx context.Context, fromUserID, toUserID string, amount int64) (*models.Account, string, error) {
 
 	if amount <= 0 {
-		return nil, nil, myerrors.ErrAmountMustBePositive
+		return nil, "", myerrors.ErrAmountMustBePositive
+	}
+
+	if fromUserID == toUserID {
+		return nil, "", myerrors.ErrSelfTransder
 	}
 
 	// check the from account
 	from, err := s.repo.FindByUserID(ctx, fromUserID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, nil, myerrors.ErrAccountNotFound
+			return nil, "", myerrors.ErrAccountNotFound
 		} else {
 			log.Printf("unexpected err: %v", err)
-			return nil, nil, myerrors.ErrInternalServer
+			return nil, "", myerrors.ErrInternalServer
 		}
 	}
 
 	// check the from account balance
 	if amount > from.Balance {
-		return nil, nil, myerrors.ErrInsufficientBalance
+		return nil, "", myerrors.ErrInsufficientBalance
 	}
 
 	// check the to account
 	to, err := s.repo.FindByUserID(ctx, toUserID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, nil, myerrors.ErrDestinationAccountNotFound
+			return nil, "", myerrors.ErrDestinationAccountNotFound
 		} else {
 			log.Printf("unexpected err: %v", err)
-			return nil, nil, myerrors.ErrInternalServer
+			return nil, "", myerrors.ErrInternalServer
 		}
 	}
 
@@ -146,26 +153,37 @@ func (s *AccountService) InitiateTransfer(ctx context.Context, fromUserID, toUse
 
 	if err := internalhttp.DoJSON(ctx, http.MethodPost, url, body, &res); err != nil {
 		log.Printf("unexpected err: %v", err)
-		return nil, nil, myerrors.ErrInternalServer
+		return nil, "", myerrors.ErrInternalServer
 	}
 
 	dataBytes, err := json.Marshal(res.Data) // convert map to json
 	if err != nil {
 		log.Printf("unexpected err: %v", err)
-		return nil, nil, myerrors.ErrInternalServer
+		return nil, "", myerrors.ErrInternalServer
 	}
 
 	var t models.Transaction
 	if err := json.Unmarshal(dataBytes, &t); err != nil { // convert json to struct
 		log.Printf("unexpected err: %v", err)
-		return nil, nil, myerrors.ErrInternalServer
+		return nil, "", myerrors.ErrInternalServer
 	}
 
-	return to, &t, nil
+	// setToken to cache
+	if err := s.tokenCacher.SetToken(ctx, t.ConfirmationToken, t.ID); err != nil {
+		log.Printf("unexpected err: %v", err)
+		return nil, "", myerrors.ErrInternalServer
+	}
+
+	return to, t.ConfirmationToken, nil
 }
 
 // returns ErrInternalServer, ErrConfirmationTokenIsNotValid, ErrAccountNotFound, ErrDestinationAccountNotFound, ErrInsufficientBalance
-func (s *AccountService) ConfirmTransfer(ctx context.Context, txID, token string) error {
+func (s *AccountService) ConfirmTransfer(ctx context.Context, token string) error {
+	txID, err := s.tokenCacher.GetToken(ctx, token)
+	if err != nil {
+		return myerrors.ErrConfirmationTokenIsNotValid
+	}
+
 	res := types.Response{}
 	url := fmt.Sprintf("%s/internal/%s", s.API_URL_TRANSACTION, txID)
 	if err := internalhttp.DoJSON(ctx, http.MethodGet, url, nil, &res); err != nil {
@@ -189,8 +207,6 @@ func (s *AccountService) ConfirmTransfer(ctx context.Context, txID, token string
 	if t.Status != models.StatusPending {
 		return myerrors.ErrConfirmationTokenIsNotValid
 	}
-
-	// TODO chekc if the casher has this value (is not expired)
 
 	// check if token and txID is the same
 	if token != t.ConfirmationToken {
@@ -236,6 +252,9 @@ func (s *AccountService) ConfirmTransfer(ctx context.Context, txID, token string
 		log.Printf("unexpected err: %v", err)
 		return myerrors.ErrInternalServer
 	}
+
+	// delete the token from the cache
+	_ = s.tokenCacher.DelToken(ctx, token)
 
 	return nil
 }

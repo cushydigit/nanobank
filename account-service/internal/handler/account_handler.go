@@ -138,7 +138,7 @@ func (h *AccountHandler) InitiateTransfer(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	destinationAccount, t, err := h.service.InitiateTransfer(r.Context(), userID, req.ToUserID, req.Amount)
+	destinationAccount, token, err := h.service.InitiateTransfer(r.Context(), userID, req.ToUserID, req.Amount)
 	if err != nil {
 		if err == myerrors.ErrAccountNotFound {
 			helpers.ErrorJSON(w, err, http.StatusNotFound)
@@ -148,7 +148,7 @@ func (h *AccountHandler) InitiateTransfer(w http.ResponseWriter, r *http.Request
 			helpers.ErrorJSON(w, err, http.StatusNotFound)
 			return
 		}
-		if err == myerrors.ErrAmountMustBePositive {
+		if err == myerrors.ErrAmountMustBePositive || err == myerrors.ErrSelfTransder {
 			helpers.ErrorJSON(w, err)
 			return
 		}
@@ -164,10 +164,9 @@ func (h *AccountHandler) InitiateTransfer(w http.ResponseWriter, r *http.Request
 		Error:   false,
 		Message: "success",
 		Data: map[string]string{
-			"confirmation_token": t.ConfirmationToken,
+			"confirmation_token": token,
 			"to_account_number":  destinationAccount.ID,
 			"to_username":        destinationAccount.Username,
-			"tx_id":              t.ID,
 		},
 	}
 
@@ -182,7 +181,7 @@ func (h *AccountHandler) ConfirmTransfer(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	if err := h.service.ConfirmTransfer(r.Context(), req.TxID, req.Token); err != nil {
+	if err := h.service.ConfirmTransfer(r.Context(), req.Token); err != nil {
 		if err == myerrors.ErrAccountNotFound {
 			helpers.ErrorJSON(w, err, http.StatusNotFound)
 			return
