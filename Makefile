@@ -10,11 +10,14 @@ tidy-account:
 	@cd ./account-service/ && go mod tidy
 tidy-transaction:
 	@cd ./transaction-service/ && go mod tidy
+tidy-mailer:
+	@cd ./mailer-service/ && go mod tidy
 tidy-shared:
 	@cd ./shared/ && go mod tidy
 
 
-tidy: tidy-shared tidy-auth tidy-gateway tidy-account tidy-transaction
+
+tidy: tidy-shared tidy-auth tidy-gateway tidy-account tidy-transaction tidy-mailer
 
 up:
 	docker-compose -p $(COMPOSE_PROJECT_NAME) -f $(COMPOSE_FILE) up -d --build
