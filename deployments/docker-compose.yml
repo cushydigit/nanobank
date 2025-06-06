@@ -49,6 +49,7 @@ services:
       API_URL_TRANSACTION: "http://transaction-service:8083"
       API_URL_REDIS: "redis:6379"
       DNS: "postgres://user:password@postgres:5432/accountdb?sslmode=disable&connect_timeout=5"
+      MQ_DNS: "amqp://admin:admin@rabbitmq:5672/"
     depends_on:
       - gateway
 
@@ -77,6 +78,7 @@ services:
     environment:
       API_URL_MAILHOG: "mailhog:1025"
       PORT: "8084"
+      MQ_DNS: "amqp://admin:admin@rabbitmq:5672/"
     depends_on:
       - gateway
 

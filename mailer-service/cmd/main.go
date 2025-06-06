@@ -11,13 +11,16 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 
 	"github.com/cushydigit/nanobank/mailer-service/internal/handler"
+	"github.com/cushydigit/nanobank/mailer-service/internal/messaging"
 	"github.com/cushydigit/nanobank/mailer-service/internal/service"
 	"github.com/cushydigit/nanobank/shared/helpers"
+	"github.com/cushydigit/nanobank/shared/internalmq"
 	"github.com/cushydigit/nanobank/shared/middlewares"
 )
 
 var (
 	// JWT_SECRET    = os.Getenv("JWT_SECRET")
+	MQ_DNS          = os.Getenv("MQ_DNS")
 	PORT            = os.Getenv("PORT")
 	API_URL_MAILHOG = os.Getenv("API_URL_MAILHOG")
 	// DNS           = os.Getenv("DNS")
@@ -28,10 +31,16 @@ var (
 
 func main() {
 
+	mq, err := internalmq.NewRabbitMQClient("amqp://admin:admin@rabbitmq:5672/")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer mq.Close()
+
 	// ctx := context.Background()
 
 	// check environment variables
-	// if PORT == "" || DNS == "" || ROOT_EMAIL == "" || ROOT_PASSWORD == "" || JWT_SECRET == "" || API_URL_REDIS == "" {
+	// if PORT == "" || DNS == "" || ROOT_EMAIL = ff= "" || ROOT_PASSWORD == "" || JWT_SECRET == "" || API_URL_REDIS == "" {
 	// 	log.Fatal("wrong environment variable")
 	// }
 	// init redis (cacher) client
@@ -48,6 +57,10 @@ func main() {
 	// create handler
 	// h := handler.NewAuthHandler(s)
 	h := handler.NewMailHandler(s)
+
+	if err := messaging.ListenForNotificatin(s, mq); err != nil {
+		log.Fatalf("failed to start listening: %v", err)
+	}
 
 	// create router mux
 	m := chi.NewRouter()

@@ -13,6 +13,7 @@ import (
 	"github.com/cushydigit/nanobank/account-service/internal/service"
 	"github.com/cushydigit/nanobank/shared/database"
 	"github.com/cushydigit/nanobank/shared/helpers"
+	"github.com/cushydigit/nanobank/shared/internalmq"
 	"github.com/cushydigit/nanobank/shared/middlewares"
 	myredis "github.com/cushydigit/nanobank/shared/redis"
 	"github.com/go-chi/chi/v5"
@@ -38,13 +39,18 @@ func main() {
 	// init redis (cacher) client
 	c := myredis.MyRedisClientInit(ctx, API_URL_REDIS)
 
+	mq, err := internalmq.NewRabbitMQClient("amqp://admin:admin@rabbitmq:5672/")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	// connect DB
 	db := database.ConnectDB(DNS)
 
 	// create repo
 	r := repository.NewPostgresAccountRepository(db)
 	// create service
-	s := service.NewAccountService(r, c, API_URL_TRANSACTION)
+	s := service.NewAccountService(r, c, mq, API_URL_TRANSACTION)
 	// create handler
 	h := handler.NewAccountHandler(s)
 
