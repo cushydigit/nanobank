@@ -13,11 +13,13 @@ import (
 	"github.com/cushydigit/nanobank/mailer-service/internal/handler"
 	"github.com/cushydigit/nanobank/mailer-service/internal/service"
 	"github.com/cushydigit/nanobank/shared/helpers"
+	"github.com/cushydigit/nanobank/shared/middlewares"
 )
 
 var (
 	// JWT_SECRET    = os.Getenv("JWT_SECRET")
-	PORT = os.Getenv("PORT")
+	PORT            = os.Getenv("PORT")
+	API_URL_MAILHOG = os.Getenv("API_URL_MAILHOG")
 	// DNS           = os.Getenv("DNS")
 	// ROOT_EMAIL    = os.Getenv("ROOT_EMAIL")
 	// ROOT_PASSWORD = os.Getenv("ROOT_PASSWORD")
@@ -42,7 +44,7 @@ func main() {
 	// r := repository.NewPostgresUserRepository(db)
 	// create service
 	// s := service.NewAuthService(r, c)
-	s := service.NewMailService()
+	s := service.NewMailService(API_URL_MAILHOG)
 	// create handler
 	// h := handler.NewAuthHandler(s)
 	h := handler.NewMailHandler(s)
@@ -56,7 +58,7 @@ func main() {
 	m.Use(middleware.Heartbeat("/ping"))
 
 	// setup routes
-	m.Post("/send", h.SendMail)
+	m.With(middlewares.ProvideSendMailReq).Post("/send", h.SendMail)
 
 	// not allowed and not found handlers
 	m.NotFound(func(w http.ResponseWriter, r *http.Request) {

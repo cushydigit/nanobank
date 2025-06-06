@@ -15,8 +15,6 @@ tidy-mailer:
 tidy-shared:
 	@cd ./shared/ && go mod tidy
 
-
-
 tidy: tidy-shared tidy-auth tidy-gateway tidy-account tidy-transaction tidy-mailer
 
 up:
@@ -25,4 +23,4 @@ up:
 down:
 	docker-compose -p $(COMPOSE_PROJECT_NAME) -f $(COMPOSE_FILE) down
 
-reset: down up
+reset: down tidy up

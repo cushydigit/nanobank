@@ -38,6 +38,7 @@ const (
 	ConfirmTransferReqKey   ContextKey = "confirm_transfer_req"
 	CreateTransactionReqKey ContextKey = "create_transaction_req"
 	UpdateTransactionReqKey ContextKey = "update_transaction_req"
+	SendMailReqKey          ContextKey = "send_mail_req"
 )
 
 // request bodies
@@ -67,6 +68,13 @@ type InitiateTransferReqBody struct {
 
 type ConfirmTransferReqBody struct {
 	Token string `json:"token"`
+}
+
+type SendMailReqBody struct {
+	From    string `json:"from"`
+	To      string `json:"to"`
+	Subject string `json:"subject"`
+	Message string `json:"message"`
 }
 
 // internal requests
