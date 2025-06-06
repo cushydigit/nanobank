@@ -14,6 +14,7 @@ services:
       API_URL_AUTH: "http://auth-service:8081"
       API_URL_ACCOUNT: "http://account-service:8082"
       API_URL_TRANSACTION: "http://transaction-service:8083"
+      API_URL_MAILER: "http://mailer-service:8084"
       API_URL_REDIS: "redis:6379"
     depends_on:
       - redis

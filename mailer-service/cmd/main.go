@@ -10,6 +10,8 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
+	"github.com/cushydigit/nanobank/mailer-service/internal/handler"
+	"github.com/cushydigit/nanobank/mailer-service/internal/service"
 	"github.com/cushydigit/nanobank/shared/helpers"
 )
 
@@ -40,8 +42,10 @@ func main() {
 	// r := repository.NewPostgresUserRepository(db)
 	// create service
 	// s := service.NewAuthService(r, c)
+	s := service.NewMailService()
 	// create handler
 	// h := handler.NewAuthHandler(s)
+	h := handler.NewMailHandler(s)
 
 	// create router mux
 	m := chi.NewRouter()
@@ -52,7 +56,7 @@ func main() {
 	m.Use(middleware.Heartbeat("/ping"))
 
 	// setup routes
-	// m.Post("/send", h.Register)
+	m.Post("/send", h.SendMail)
 
 	// not allowed and not found handlers
 	m.NotFound(func(w http.ResponseWriter, r *http.Request) {
