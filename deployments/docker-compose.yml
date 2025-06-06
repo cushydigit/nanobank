@@ -92,8 +92,17 @@ services:
       - 1025:1025 # smtp server
       - 8025:8025 # web interface
 
-
-
+  rabbitmq:
+    image: docker.arvancloud.ir/rabbitmq:3.9-management-alpine
+    ports:
+      - 15672:15672 # web interface
+      - 5672:5672
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    volumes:
+      - ../db-data/rabbitmq/:/var/lib/rabbitmq
+  
   postgres:
     image: docker.arvancloud.ir/postgres:14.0
     ports:
