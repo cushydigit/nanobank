@@ -63,7 +63,7 @@ func (s *AccountService) Create(ctx context.Context, userID, username string) (*
 }
 
 // returns Errs: ErrAmountMustBePositive, ErrAccountNotFound, ErrInternalServer
-func (s *AccountService) Deposit(ctx context.Context, userID string, amount int64) error {
+func (s *AccountService) Deposit(ctx context.Context, userID, username, email string, amount int64) error {
 	if amount <= 0 {
 		return myerrors.ErrAmountMustBePositive
 	}
@@ -82,18 +82,19 @@ func (s *AccountService) Deposit(ctx context.Context, userID string, amount int6
 	}
 
 	payload := types.BalanceChangePayload{
-		Email:  "test@test.com",
-		Type:   "deposit",
-		Amount: amount,
+		Username: username,
+		Email:    email,
+		Type:     "deposit",
+		Amount:   amount,
 	}
 
-	messaging.PublishNotifaction(s.mq, "balance.notification", payload)
+	messaging.PublishNotifaction(s.mq, internalmq.QUEUE_NOTIFICATION_BALANCE, payload)
 
 	return nil
 }
 
 // returns Errs: ErrAmountMustBePositive, ErrAccountNotFound, ErrInsufficientBalance, ErrInternalServer
-func (s *AccountService) Withdraw(ctx context.Context, userID string, amount int64) error {
+func (s *AccountService) Withdraw(ctx context.Context, userID, username, email string, amount int64) error {
 	if amount <= 0 {
 		return myerrors.ErrAmountMustBePositive
 	}
@@ -114,6 +115,16 @@ func (s *AccountService) Withdraw(ctx context.Context, userID string, amount int
 		log.Printf("unexpected error: %v", err)
 		return err
 	}
+
+	payload := types.BalanceChangePayload{
+		Username: username,
+		Email:    email,
+		Type:     "withdraw",
+		Amount:   amount,
+	}
+
+	messaging.PublishNotifaction(s.mq, internalmq.QUEUE_NOTIFICATION_BALANCE, payload)
+
 	return nil
 }
 

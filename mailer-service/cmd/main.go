@@ -19,45 +19,33 @@ import (
 )
 
 var (
-	// JWT_SECRET    = os.Getenv("JWT_SECRET")
 	MQ_DNS          = os.Getenv("MQ_DNS")
 	PORT            = os.Getenv("PORT")
 	API_URL_MAILHOG = os.Getenv("API_URL_MAILHOG")
-	// DNS           = os.Getenv("DNS")
-	// ROOT_EMAIL    = os.Getenv("ROOT_EMAIL")
-	// ROOT_PASSWORD = os.Getenv("ROOT_PASSWORD")
-	// API_URL_REDIS = os.Getenv("API_URL_REDIS")
 )
 
 func main() {
 
+	//	check environment variables
+	if PORT == "" || MQ_DNS == "" || API_URL_MAILHOG == "" {
+		log.Fatal("wrong environment variable")
+	}
+
+	// create rabbitmq client
 	mq, err := internalmq.NewRabbitMQClient("amqp://admin:admin@rabbitmq:5672/")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer mq.Close()
+	// define the queue
+	mq.DeclareQueue(internalmq.QUEUE_NOTIFICATION_BALANCE)
 
-	// ctx := context.Background()
-
-	// check environment variables
-	// if PORT == "" || DNS == "" || ROOT_EMAIL = ff= "" || ROOT_PASSWORD == "" || JWT_SECRET == "" || API_URL_REDIS == "" {
-	// 	log.Fatal("wrong environment variable")
-	// }
-	// init redis (cacher) client
-	// c := myredis.MyRedisClientInit(ctx, API_URL_REDIS)
-
-	// connect DB
-	// db := database.ConnectDB(DNS)
-
-	// create repo
-	// r := repository.NewPostgresUserRepository(db)
 	// create service
-	// s := service.NewAuthService(r, c)
 	s := service.NewMailService(API_URL_MAILHOG)
 	// create handler
-	// h := handler.NewAuthHandler(s)
 	h := handler.NewMailHandler(s)
 
+	// listen for upcoming messages
 	if err := messaging.ListenForNotificatin(s, mq); err != nil {
 		log.Fatalf("failed to start listening: %v", err)
 	}

@@ -101,7 +101,10 @@ type Response struct {
 // models types
 
 type BalanceChangePayload struct {
-	Email  string `json:"email"`
-	Type   string `json:"type"`
-	Amount int64  `json:"amount"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Type     string `json:"type"`
+	Amount   int64  `json:"amount"`
 }
+
+//

@@ -10,6 +10,10 @@ import (
 // this structure works fine if a service is just a listener or consumer
 // for cases that the service is listener and consumer it should use seprate channel using mustex
 
+const (
+	QUEUE_NOTIFICATION_BALANCE = "notification.balance"
+)
+
 type RabbitMQClient struct {
 	Conn    *amqp.Connection
 	Channel *amqp.Channel

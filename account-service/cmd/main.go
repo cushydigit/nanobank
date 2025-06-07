@@ -23,6 +23,7 @@ import (
 var (
 	PORT                = os.Getenv("PORT")
 	DNS                 = os.Getenv("DNS")
+	MQ_DNS              = os.Getenv("MQ_DNS")
 	API_URL_TRANSACTION = os.Getenv("API_URL_TRANSACTION")
 	API_URL_REDIS       = os.Getenv("API_URL_REDIS")
 )
@@ -32,21 +33,25 @@ func main() {
 	ctx := context.Background()
 
 	// check environment variables
-	if PORT == "" || DNS == "" || API_URL_TRANSACTION == "" || API_URL_REDIS == "" {
+	if PORT == "" || DNS == "" || API_URL_TRANSACTION == "" || API_URL_REDIS == "" || MQ_DNS == "" {
 		log.Fatal("wrong environment variable")
 	}
 
 	// init redis (cacher) client
 	c := myredis.MyRedisClientInit(ctx, API_URL_REDIS)
 
-	mq, err := internalmq.NewRabbitMQClient("amqp://admin:admin@rabbitmq:5672/")
+	// create a rabbitmq client
+	mq, err := internalmq.NewRabbitMQClient(MQ_DNS)
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer mq.Close()
+
+	// declare queue
+	mq.DeclareQueue(internalmq.QUEUE_NOTIFICATION_BALANCE)
 
 	// connect DB
 	db := database.ConnectDB(DNS)
-
 	// create repo
 	r := repository.NewPostgresAccountRepository(db)
 	// create service
