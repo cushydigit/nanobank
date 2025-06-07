@@ -43,6 +43,7 @@ func (s *AuthService) Register(ctx context.Context, username, email, password st
 
 	// insert new user to DB
 	if err := s.repo.Create(ctx, newUser); err != nil {
+		log.Printf("unexpected err: %v", err)
 		return nil, myerrors.ErrInternalServer
 	}
 

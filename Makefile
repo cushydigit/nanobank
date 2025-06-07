@@ -24,3 +24,17 @@ down:
 	docker-compose -p $(COMPOSE_PROJECT_NAME) -f $(COMPOSE_FILE) down
 
 reset: down tidy up
+
+minikube_docker:
+	@eval $(minikube docker-env)
+
+minikube_docker_unset:
+	@eval $(minikube docker-env --unset)
+
+build_image_auth:
+	@docker build -t auth-service:latest -f auth-service/Dockerfile .
+
+build_image_gateway:
+	@docker build -t gateway:latest -f gateway/Dockerfile .
+
+
