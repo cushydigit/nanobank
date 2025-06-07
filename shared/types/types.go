@@ -38,6 +38,7 @@ const (
 	ConfirmTransferReqKey   ContextKey = "confirm_transfer_req"
 	CreateTransactionReqKey ContextKey = "create_transaction_req"
 	UpdateTransactionReqKey ContextKey = "update_transaction_req"
+	SendMailReqKey          ContextKey = "send_mail_req"
 )
 
 // request bodies
@@ -69,6 +70,13 @@ type ConfirmTransferReqBody struct {
 	Token string `json:"token"`
 }
 
+type SendMailReqBody struct {
+	From    string `json:"from"`
+	To      string `json:"to"`
+	Subject string `json:"subject"`
+	Message string `json:"message"`
+}
+
 // internal requests
 type CreateTransactionReqBody struct {
 	FromUserID string `json:"from_user_id"`
@@ -91,3 +99,12 @@ type Response struct {
 // general response
 
 // models types
+
+type BalanceChangePayload struct {
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Type     string `json:"type"`
+	Amount   int64  `json:"amount"`
+}
+
+//

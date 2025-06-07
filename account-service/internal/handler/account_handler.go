@@ -68,13 +68,16 @@ func (h *AccountHandler) Deposit(w http.ResponseWriter, r *http.Request) {
 	// will injected in gateway with requireauth middleware
 	// TODO change the type casting and remove string
 	userID := r.Header.Get(string(types.XUserID))
+	userName := r.Header.Get(string(types.XUsername))
+	email := r.Header.Get(string(types.XUserEmail))
+
 	req, ok := r.Context().Value(types.UpdateBlanceReqKey).(types.UpdateBalanceReqBody)
 	if !ok {
 		helpers.ErrorJSON(w, myerrors.ErrContextValueNotFoundInRequest, http.StatusInternalServerError)
 		return
 	}
 
-	if err := h.service.Deposit(r.Context(), userID, req.Amount); err != nil {
+	if err := h.service.Deposit(r.Context(), userID, userName, email, req.Amount); err != nil {
 		if err == myerrors.ErrAccountNotFound {
 			helpers.ErrorJSON(w, err, http.StatusNotFound)
 			return
@@ -99,12 +102,15 @@ func (h *AccountHandler) Deposit(w http.ResponseWriter, r *http.Request) {
 func (h *AccountHandler) Withdraw(w http.ResponseWriter, r *http.Request) {
 	// will injected in gateway with requireauth middleware
 	userID := r.Header.Get(string(types.XUserID))
+	userName := r.Header.Get(string(types.XUsername))
+	email := r.Header.Get(string(types.XUserEmail))
+
 	req, ok := r.Context().Value(types.UpdateBlanceReqKey).(types.UpdateBalanceReqBody)
 	if !ok {
 		helpers.ErrorJSON(w, myerrors.ErrContextValueNotFoundInRequest, http.StatusInternalServerError)
 		return
 	}
-	if err := h.service.Withdraw(r.Context(), userID, req.Amount); err != nil {
+	if err := h.service.Withdraw(r.Context(), userID, userName, email, req.Amount); err != nil {
 		if err == myerrors.ErrAccountNotFound {
 			helpers.ErrorJSON(w, err, http.StatusNotFound)
 			return

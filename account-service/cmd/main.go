@@ -13,6 +13,7 @@ import (
 	"github.com/cushydigit/nanobank/account-service/internal/service"
 	"github.com/cushydigit/nanobank/shared/database"
 	"github.com/cushydigit/nanobank/shared/helpers"
+	"github.com/cushydigit/nanobank/shared/internalmq"
 	"github.com/cushydigit/nanobank/shared/middlewares"
 	myredis "github.com/cushydigit/nanobank/shared/redis"
 	"github.com/go-chi/chi/v5"
@@ -22,6 +23,7 @@ import (
 var (
 	PORT                = os.Getenv("PORT")
 	DNS                 = os.Getenv("DNS")
+	MQ_DNS              = os.Getenv("MQ_DNS")
 	API_URL_TRANSACTION = os.Getenv("API_URL_TRANSACTION")
 	API_URL_REDIS       = os.Getenv("API_URL_REDIS")
 )
@@ -31,20 +33,29 @@ func main() {
 	ctx := context.Background()
 
 	// check environment variables
-	if PORT == "" || DNS == "" || API_URL_TRANSACTION == "" || API_URL_REDIS == "" {
+	if PORT == "" || DNS == "" || API_URL_TRANSACTION == "" || API_URL_REDIS == "" || MQ_DNS == "" {
 		log.Fatal("wrong environment variable")
 	}
 
 	// init redis (cacher) client
 	c := myredis.MyRedisClientInit(ctx, API_URL_REDIS)
 
+	// create a rabbitmq client
+	mq, err := internalmq.NewRabbitMQClient(MQ_DNS)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer mq.Close()
+
+	// declare queue
+	mq.DeclareQueue(internalmq.QUEUE_NOTIFICATION_BALANCE)
+
 	// connect DB
 	db := database.ConnectDB(DNS)
-
 	// create repo
 	r := repository.NewPostgresAccountRepository(db)
 	// create service
-	s := service.NewAccountService(r, c, API_URL_TRANSACTION)
+	s := service.NewAccountService(r, c, mq, API_URL_TRANSACTION)
 	// create handler
 	h := handler.NewAccountHandler(s)
 

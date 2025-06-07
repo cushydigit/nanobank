@@ -52,6 +52,11 @@ func Routes() http.Handler {
 		r.With(middlewares.RequireAuth).Route("/transaction", func(r chi.Router) {
 			r.Mount("/", http.StripPrefix("/api/transaction", utils.ProxyHandler(API_URL_TRANSACTION, "/internal")))
 		})
+
+		// mailer service
+		r.With(middlewares.RequireAuth, middlewares.RequireRoot).Route("/mail", func(r chi.Router) {
+			r.Mount("/", http.StripPrefix("/api/mail", utils.ProxyHandler(API_URL_MAILER, "/internal")))
+		})
 	})
 
 	// not allowed and not found handlers

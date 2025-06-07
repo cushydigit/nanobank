@@ -8,9 +8,11 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/cushydigit/nanobank/account-service/internal/messaging"
 	"github.com/cushydigit/nanobank/account-service/internal/repository"
 	myerrors "github.com/cushydigit/nanobank/shared/errors"
 	"github.com/cushydigit/nanobank/shared/internalhttp"
+	"github.com/cushydigit/nanobank/shared/internalmq"
 	"github.com/cushydigit/nanobank/shared/models"
 	"github.com/cushydigit/nanobank/shared/redis"
 	"github.com/cushydigit/nanobank/shared/types"
@@ -19,13 +21,15 @@ import (
 type AccountService struct {
 	repo                repository.AccountRepository
 	tokenCacher         redis.TokenCacher
+	mq                  *internalmq.RabbitMQClient
 	API_URL_TRANSACTION string
 }
 
-func NewAccountService(r repository.AccountRepository, c redis.TokenCacher, url string) *AccountService {
+func NewAccountService(r repository.AccountRepository, c redis.TokenCacher, mq *internalmq.RabbitMQClient, url string) *AccountService {
 	return &AccountService{
 		repo:                r,
 		tokenCacher:         c,
+		mq:                  mq,
 		API_URL_TRANSACTION: url,
 	}
 }
@@ -59,11 +63,12 @@ func (s *AccountService) Create(ctx context.Context, userID, username string) (*
 }
 
 // returns Errs: ErrAmountMustBePositive, ErrAccountNotFound, ErrInternalServer
-func (s *AccountService) Deposit(ctx context.Context, userID string, amount int64) error {
+func (s *AccountService) Deposit(ctx context.Context, userID, username, email string, amount int64) error {
 	if amount <= 0 {
 		return myerrors.ErrAmountMustBePositive
 	}
-	if _, err := s.repo.FindByUserID(ctx, userID); err != nil {
+	_, err := s.repo.FindByUserID(ctx, userID)
+	if err != nil {
 		if err == sql.ErrNoRows {
 			return myerrors.ErrAccountNotFound
 		} else {
@@ -75,11 +80,21 @@ func (s *AccountService) Deposit(ctx context.Context, userID string, amount int6
 		log.Printf("unexpected error: %v", err)
 		return err
 	}
+
+	payload := types.BalanceChangePayload{
+		Username: username,
+		Email:    email,
+		Type:     "deposit",
+		Amount:   amount,
+	}
+
+	messaging.PublishNotifaction(s.mq, internalmq.QUEUE_NOTIFICATION_BALANCE, payload)
+
 	return nil
 }
 
 // returns Errs: ErrAmountMustBePositive, ErrAccountNotFound, ErrInsufficientBalance, ErrInternalServer
-func (s *AccountService) Withdraw(ctx context.Context, userID string, amount int64) error {
+func (s *AccountService) Withdraw(ctx context.Context, userID, username, email string, amount int64) error {
 	if amount <= 0 {
 		return myerrors.ErrAmountMustBePositive
 	}
@@ -100,6 +115,16 @@ func (s *AccountService) Withdraw(ctx context.Context, userID string, amount int
 		log.Printf("unexpected error: %v", err)
 		return err
 	}
+
+	payload := types.BalanceChangePayload{
+		Username: username,
+		Email:    email,
+		Type:     "withdraw",
+		Amount:   amount,
+	}
+
+	messaging.PublishNotifaction(s.mq, internalmq.QUEUE_NOTIFICATION_BALANCE, payload)
+
 	return nil
 }
 

@@ -14,6 +14,7 @@ services:
       API_URL_AUTH: "http://auth-service:8081"
       API_URL_ACCOUNT: "http://account-service:8082"
       API_URL_TRANSACTION: "http://transaction-service:8083"
+      API_URL_MAILER: "http://mailer-service:8084"
       API_URL_REDIS: "redis:6379"
     depends_on:
       - redis
@@ -48,6 +49,7 @@ services:
       API_URL_TRANSACTION: "http://transaction-service:8083"
       API_URL_REDIS: "redis:6379"
       DNS: "postgres://user:password@postgres:5432/accountdb?sslmode=disable&connect_timeout=5"
+      MQ_DNS: "amqp://admin:admin@rabbitmq:5672/"
     depends_on:
       - gateway
 
@@ -66,11 +68,43 @@ services:
     depends_on:
       - gateway
 
+  mailer-service:
+    image: mailer-service
+    build:
+      context: ../
+      dockerfile: ./mailer-service/Dockerfile
+    ports:
+      - 8084:8080
+    environment:
+      API_URL_MAILHOG: "mailhog:1025"
+      PORT: "8084"
+      MQ_DNS: "amqp://admin:admin@rabbitmq:5672/"
+    depends_on:
+      - gateway
+
+
   redis:
     image: docker.arvancloud.ir/redis:alpine
     ports:
       - 6379:6379
 
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - 1025:1025 # smtp server
+      - 8025:8025 # web interface
+
+  rabbitmq:
+    image: docker.arvancloud.ir/rabbitmq:3.9-management-alpine
+    ports:
+      - 15672:15672 # web interface
+      - 5672:5672
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    volumes:
+      - ../db-data/rabbitmq/:/var/lib/rabbitmq
+  
   postgres:
     image: docker.arvancloud.ir/postgres:14.0
     ports:
