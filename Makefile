@@ -1,21 +1,27 @@
+.PHONY: tidy up down
+
+## DEVELOPMENT
+
 COMPOSE_PROJECT_NAME=nanobank
 COMPOSE_FILE=./deployments/docker-compose.yml
+SERVICE_NAME_1=gateway
+SERVICE_NAME_2=auth-service
+SERVICE_NAME_3=account-service
+SERVICE_NAME_4=transaction-service
+SERVICE_NAME_5=mailer-service
+SERVICE_SHARED=shared
+SERVICE_NAME_6=postgres
+SERVICE_NAME_7=redis
+SERVICE_NAME_8=mailhog
+SERVICE_NAME_9=rabbitmq
 
-.PHONY: tidy up down	
-tidy-gateway:
-	@cd ./gateway/ && go mod tidy
-tidy-auth:
-	@cd ./auth-service/ && go mod tidy
-tidy-account:
-	@cd ./account-service/ && go mod tidy
-tidy-transaction:
-	@cd ./transaction-service/ && go mod tidy
-tidy-mailer:
-	@cd ./mailer-service/ && go mod tidy
-tidy-shared:
-	@cd ./shared/ && go mod tidy
-
-tidy: tidy-shared tidy-auth tidy-gateway tidy-account tidy-transaction tidy-mailer
+tidy:
+	@cd ./$(SERVICE_NAME_1)/ && go mod tidy
+	@cd ./$(SERVICE_NAME_2)/ && go mod tidy
+	@cd ./$(SERVICE_NAME_3)/ && go mod tidy
+	@cd ./$(SERVICE_NAME_4)/ && go mod tidy
+	@cd ./$(SERVICE_NAME_5)/ && go mod tidy
+	@cd ./$(SERVICE_SHARED)/ && go mod tidy
 
 up:
 	docker-compose -p $(COMPOSE_PROJECT_NAME) -f $(COMPOSE_FILE) up -d --build
@@ -25,61 +31,77 @@ down:
 
 reset: down tidy up
 
-build_mini_gateway:
-	@eval $(minikube docker-env) && docker build -t gateway:latest -f gateway/Dockerfile .
 
-build_mini_auth:
-	@eval $(minikube docker-env) && docker build -t auth-service:latest -f auth-service/Dockerfile .
+## DEPLOYMENT
+KUBECTL=kubectl
+MINIKUBE=minikube
+K8S_DIR=./deployments/k8s/base
 
-build_mini_account:
-	@eval $(minikube docker-env) && docker build -t account-service:latest -f account-service/Dockerfile .
+start:
+	@$(MINIKUBE) start
 
-build_mini_transaction:
-	@eval $(minikube docker-env) && docker build -t transaction-service:latest -f transaction-service/Dockerfile .
+stop:
+	@$(MINIKUBE) stop
 
-build_mini_mailer:
-	@eval $(minikube docker-env) && docker build -t mailer-service:latest -f mailer-service/Dockerfile .
+status:
+	@$(MINIKUBE) get all
 
-deploy_gateway:
-	@kubectl apply -f ./deployments/k8s/base/gateway/deployment.yaml
-	@kubectl apply -f ./deployments/k8s/base/gateway/service.yaml
+build:
+	@eval $(minikube docker-env) && docker build -t $(SERVICE_NAME_1):latest -f $(SERVICE_NAME_1)/Dockerfile .
+	@eval $(minikube docker-env) && docker build -t $(SERVICE_NAME_2):latest -f $(SERVICE_NAME_2)/Dockerfile .
+	@eval $(minikube docker-env) && docker build -t $(SERVICE_NAME_3):latest -f $(SERVICE_NAME_3)/Dockerfile .
+	@eval $(minikube docker-env) && docker build -t $(SERVICE_NAME_4):latest -f $(SERVICE_NAME_4)/Dockerfile .
+	@eval $(minikube docker-env) && docker build -t $(SERVICE_NAME_5):latest -f $(SERVICE_NAME_5)/Dockerfile .
 
-deploy_auth:
-	@kubectl apply -f ./deployments/k8s/base/auth-service/deployment.yaml
-	@kubectl apply -f ./deployments/k8s/base/auth-service/service.yaml
+deploy:
+	@$(KUBECTL) apply -f $(K8S_DIR)/$(SERVICE_NAME_1)
+	@$(KUBECTL) apply -f $(K8S_DIR)/$(SERVICE_NAME_2)
+	@$(KUBECTL) apply -f $(K8S_DIR)/$(SERVICE_NAME_3)
+	@$(KUBECTL) apply -f $(K8S_DIR)/$(SERVICE_NAME_4)
+	@$(KUBECTL) apply -f $(K8S_DIR)/$(SERVICE_NAME_5)
+	@$(KUBECTL) apply -f $(K8S_DIR)/$(SERVICE_NAME_6)
+	@$(KUBECTL) apply -f $(K8S_DIR)/$(SERVICE_NAME_7)
+	@$(KUBECTL) apply -f $(K8S_DIR)/$(SERVICE_NAME_8)
+	@$(KUBECTL) apply -f $(K8S_DIR)/$(SERVICE_NAME_9)
 
-deploy_account:
-	@kubectl apply -f ./deployments/k8s/base/account-service/deployment.yaml
-	@kubectl apply -f ./deployments/k8s/base/account-service/service.yaml
+delete:
+	@$(KUBECTL) delete -f $(K8S_DIR)/$(SERVICE_NAME_1) || true
+	@$(KUBECTL) delete -f $(K8S_DIR)/$(SERVICE_NAME_2) || true
+	@$(KUBECTL) delete -f $(K8S_DIR)/$(SERVICE_NAME_3) || true
+	@$(KUBECTL) delete -f $(K8S_DIR)/$(SERVICE_NAME_4) || true
+	@$(KUBECTL) delete -f $(K8S_DIR)/$(SERVICE_NAME_5) || true
+	@$(KUBECTL) delete -f $(K8S_DIR)/$(SERVICE_NAME_6) || true
+	@$(KUBECTL) delete -f $(K8S_DIR)/$(SERVICE_NAME_7) || true
+	@$(KUBECTL) delete -f $(K8S_DIR)/$(SERVICE_NAME_8) || true
+	@$(KUBECTL) delete -f $(K8S_DIR)/$(SERVICE_NAME_9) || true
 
-deploy_transaction:
-	@kubectl apply -f ./deployments/k8s/base/transaction-service/deployment.yaml
-	@kubectl apply -f ./deployments/k8s/base/transaction-service/service.yaml
+delete-pvcs:
+	@$(KUBECTL) delete pvc -all
 
-deploy_mailer:
-	@kubectl apply -f ./deployments/k8s/base/mailer-service/deployment.yaml
-	@kubectl apply -f ./deployments/k8s/base/mailer-service/service.yaml
+restart: delete build deploy
 
-deploy_redis:
-	@kubectl apply -f ./deployments/k8s/base/mailer-service/deployment.yaml
-	@kubectl apply -f ./deployments/k8s/base/mailer-service/service.yaml
+full-reset: delete delete-pvcs stop start build deploy
 
-deploy_mailhog:
-	@kubectl apply -f ./deployments/k8s/base/mailhog/deployment.yaml
-	@kubectl apply -f ./deployments/k8s/base/mailhog/service.yaml
+logs:
+	@$(KUBECTL) logs -l app=$(SERVICE_NAME_1) --tail=100 -f
+logs-auth:
+	@$(KUBECTL) logs -l app=$(SERVICE_NAME_2) --tail=100 -f
+logs-account:
+	@$(KUBECTL) logs -l app=$(SERVICE_NAME_3) --tail=100 -f
 
-deploy_rabbitmq:
-	@kubectl apply -f ./deployments/k8s/base/rabbitmq/deployment.yaml
-	@kubectl apply -f ./deployments/k8s/base/rabbitmq/service.yaml
+open-gateway:
+	@$(MINIKUBE) service $(SERVICE_NAME_1)
 
-deploy_postgres:
-	@kubectl apply -f ./deployments/k8s/base/postgres/pvc.yaml
-	@kubectl apply -f ./deployments/k8s/base/postgres/deployment.yaml
-	@kubectl apply -f ./deployments/k8s/base/postgres/service.yaml
+open-rabbitmq:
+	@$(MINIKUBE) service $(SERVICE_NAME_9)
+
+open-mailhog:
+	@$(MINIKUBE) service $(SERVICE_NAME_8)
+
+help:
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-24s\033[0m %s\n", $$1, $$2}'
 
 
-build_mini_all: build_mini_gateway build_mini_auth build_mini_account build_mini_transaction build_mini_mailer
 
-deploy_all: deploy_gateway deploy_auth deploy_account deploy_transaction deploy_mailer deploy_postgres deploy_redis deploy_mailhog deploy_rabbitmq 
 
 
