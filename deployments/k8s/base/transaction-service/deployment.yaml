@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: transction-service
+  labels:
+    app: transaction-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: transaction-service
+  template:
+    metadata:
+      labels:
+        app: transaction-service
+    spec:
+      containers:
+        - name: transaction-service
+          image: transaction-service:latest # we will build this image locally
+          imagePullPolicy: IfNotPresent 
+          ports:
+            - containerPort: 8083 # the app will listen on this port
+          env:
+            - name: PORT
+              value: "8083" # the env that tell the app where to listen to port
+            - name: DNS
+              value: "postgres://user:password@postgres:5432/nanobankdb?sslmode=disable&connect_timeout=5"
+            - name: API_URL_REDIS
+              value: "redis:6379"
+            - name: ROOT_EMAIL
+              value: "admin@nanobank.com"
+

@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+  labels:
+    app: auth-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+    spec:
+      containers:
+        - name: auth-service
+          image: auth-service:latest # we will build this image locally
+          imagePullPolicy: IfNotPresent 
+          ports:
+            - containerPort: 8081 # the app will listen on this port
+          env:
+            - name: PORT
+              value: "8081" # the env that tell the app where to listen to port
+            - name: DNS
+              value: "postgres://user:password@postgres:5432/nanobankdb?sslmode=disable&connect_timeout=5"
+            - name: API_URL_REDIS
+              value: "redis:6379"
+            - name: JWT_SECRET
+              value: "veryveryverysecretkey"
+            - name: ROOT_EMAIL
+              value: "admin@nanobank.com"
+            - name: ROOT_PASSWORD
+              value: "passowrd"
+
