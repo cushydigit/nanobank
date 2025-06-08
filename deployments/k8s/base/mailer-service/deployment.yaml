@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mailer-service
+  labels:
+    app: mailer-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mailer-service
+  template:
+    metadata:
+      labels:
+        app: mailer-service
+    spec:
+      containers:
+        - name: mailer-service
+          image: mailer-service:latest # we will build this image locally
+          imagePullPolicy: IfNotPresent 
+          ports:
+            - containerPort: 8084 # the app will listen on this port
+          env:
+            - name: PORT
+              value: "8084" # the env that tell the app where to listen to port
+            - name: DNS
+              value: "postgres://user:password@postgres:5432/nanobankdb?sslmode=disable&connect_timeout=5"
+            - name: API_URL_MAILHOG
+              value: "mailhog:1025"
+            - name: MQ_DNS 
+              value: "amqp://admin:admin@rabbitmq:5672/"
+
+

@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway 
+  labels:
+    app: gateway 
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gateway 
+  template:
+    metadata:
+      labels:
+        app: gateway 
+    spec:
+      containers:
+        - name: gateway 
+          image: gateway:latest # we will build this image locally
+          imagePullPolicy: IfNotPresent 
+          ports:
+            - containerPort: 8080 # the app server runs on this
+          env:
+            - name: PORT
+              value: "8080" # the actual env variable that app needs to know to listen
+            - name: API_URL_REDIS
+              value: "redis:6379"
+            - name: API_URL_AUTH
+              value: "http://auth-service:80"
+            - name: API_URL_ACCOUNT
+              value: "http://account-service:80"
+            - name: API_URL_TRANSACTION
+              value: "http://transaction-service:80"
+            - name: API_URL_MAILER
+              value: "http://mailer-service:80"
+            - name: JWT_SECRET
+              value: "veryveryverysecretkey"
+
+
+
