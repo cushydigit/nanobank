@@ -7,6 +7,16 @@ import (
 	"time"
 )
 
+const CREATE_USERS_TABLE = `
+	CREATE TABLE IF NOT EXISTS users (
+        id TEXT PRIMARY KEY,
+        username TEXT NOT NULL,
+        email TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT now()
+    );
+	`
+
 type User struct {
 	ID        string    `json:"id"`
 	Username  string    `json:"username"`
