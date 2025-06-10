@@ -8,7 +8,6 @@
   <img src="https://img.shields.io/badge/Go-1.24-blue.svg" alt="React 18+">
   <img src="https://img.shields.io/badge/Build-Passing-brightgreen.svg" alt="Project Status">
   <img src="https://img.shields.io/badge/Docker-Enabled-blue.svg" alt="Project Status">
-  <img src="https://img.shields.io/badge/Build-Passing-brightgreen.svg" alt="Project Status">
   <img src="https://img.shields.io/badge/PostgreSQL-Supported-blue.svg" alt="Project Status">
 </p>
 <p align="center">
@@ -48,7 +47,7 @@ make stop
 
 ## Technology Stack 
 
-- **Language**: Go 1.24
+- `**Language**`: Go 1.24
 - **Architecture**: Clean Architecture with microservices
 - **Communication**: REST APIs over HTTP protocol
 - **Containerizaion**: Docker
