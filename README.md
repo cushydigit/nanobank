@@ -47,17 +47,17 @@ make stop
 
 ## Technology Stack 
 
-- **`Language`**: Go 1.24
-- **`Architecture`**: Clean Architecture with microservices
-- **`Communication`**: REST APIs over HTTP protocol
-- **`Containerizaion`**: Docker
-- **`Orchestrates`**: Docker compose || Kubernetes (Minikube)
-- **`Database`**: PostgreSQL
-- **`Broker`**: RabbitMQ
-- **`Cache`**: Redis 
-- **`Email `Testing**: Mailhog
-- **`Build `System**: Makefile with common commands
-- **`API `Tesing**: Postman collection included
+- **`Language`** : Go 1.24
+- **`Architecture`** : Clean Architecture with microservices
+- **`Communication`** : REST APIs over HTTP protocol
+- **`Containerizaion`** : Docker
+- **`Orchestrates`** : Docker compose || Kubernetes (Minikube)
+- **`Database`** : PostgreSQL
+- **`Broker`** : RabbitMQ
+- **`Cache`** : Redis 
+- **`Email Testing`** : Mailhog
+- **`Build System`** : Makefile with common commands
+- **`API Tesing`** : Postman collection included
 
 ## Kubernetes Setup (Minikube)
 Make sure you ahave Minikube[http://google.com] installed
