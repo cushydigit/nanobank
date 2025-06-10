@@ -47,7 +47,7 @@ make stop
 
 ## Technology Stack 
 
-- `**Language**`: Go 1.24
+- **`Language`**: Go 1.24
 - **Architecture**: Clean Architecture with microservices
 - **Communication**: REST APIs over HTTP protocol
 - **Containerizaion**: Docker
@@ -87,9 +87,17 @@ nanobank/
 
 ```
 
-## Request Processing Flow
+## Request Processing Flows
 
-![App Screenshot](./assets/nanobank_flow_overview.png)
+### overview flow
+
+![flow-overview](./assets/nanobank_flow_overview.png)
+
+### auth flow
+![flow-auth](./assets/nanobank_auth_flow.png)
+
+### transfer flow 
+![flow-transfer](./assets/nanobank_data_flow.png)
 
 ## Postman Collection
 
