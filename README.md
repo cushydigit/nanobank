@@ -16,14 +16,14 @@ NanoBank is a modular, containerized **banking microservices** project built in 
 
 ## Services 
 
-- **gateway** : API Gateway, entrypoint for clients
-- **auth-service** : register login logout, secure with JWT refresh token rotation
-- **account-service** : manage user acccount and balance, deposit, withdraw and transfer between accounts
-- **transaction-service** : the transaction history and status
-- **mialer-service** : email cmpt protocol vai Mailhog
-- **postgres** : sql database with persistance
-- **redis** : used for session/token management
-- **mailhog** : mail teseting web UI 
+- **`gateway`** : API Gateway, entrypoint for clients
+- **`auth-service`** : register login logout, secure with JWT refresh token rotation
+- **`account-service`** : manage user acccount and balance, deposit, withdraw and transfer between accounts
+- **`transaction-service`** : the transaction history and status
+- **`mialer-service`** : email cmpt protocol vai Mailhog
+- **`postgres`** : sql database with persistance
+- **`redis`** : used for session/token management
+- **`mailhog`** : mail teseting web UI 
 
 ## Getting Started
 
@@ -48,16 +48,16 @@ make stop
 ## Technology Stack 
 
 - **`Language`**: Go 1.24
-- **Architecture**: Clean Architecture with microservices
-- **Communication**: REST APIs over HTTP protocol
-- **Containerizaion**: Docker
-- **Orchestrates**: Docker compose || Kubernetes (Minikube)
-- **Database**: PostgreSQL
-- **Broker**: RabbitMQ
-- **Cache**: Redis 
-- **Email Testing**: Mailhog
-- **Build System**: Makefile with common commands
-- **API Tesing**: Postman collection included
+- **`Architecture`**: Clean Architecture with microservices
+- **`Communication`**: REST APIs over HTTP protocol
+- **`Containerizaion`**: Docker
+- **`Orchestrates`**: Docker compose || Kubernetes (Minikube)
+- **`Database`**: PostgreSQL
+- **`Broker`**: RabbitMQ
+- **`Cache`**: Redis 
+- **`Email `Testing**: Mailhog
+- **`Build `System**: Makefile with common commands
+- **`API `Tesing**: Postman collection included
 
 ## Kubernetes Setup (Minikube)
 Make sure you ahave Minikube[http://google.com] installed
