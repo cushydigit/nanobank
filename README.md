@@ -5,22 +5,23 @@
   <a href="https://github.com/cushydigit/microstore/LICENSE">
     <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License MIT">
   </a>
-  <img src="https://img.shields.io/badge/Go-1.24-blue.svg" alt="React 18+">
+  <img src="https://img.shields.io/badge/Go-1.24-blue.svg" alt="Go 1.24+">
   <img src="https://img.shields.io/badge/Build-Passing-brightgreen.svg" alt="Project Status">
   <img src="https://img.shields.io/badge/Docker-Enabled-blue.svg" alt="Project Status">
   <img src="https://img.shields.io/badge/PostgreSQL-Supported-blue.svg" alt="Project Status">
 </p>
 <p align="center">
-NanoBank is a modular, containerized **banking microservices** project built in Go, designed for local development and deployment using **Docker Compose** and **Kubernetes (Minikube)**. It includes authentication, account management, transaction tracking, email notifications, and message brokering via RabbitMQ.
+NanoBank is a modular, containerized <strong>banking microservices</strong> project built in Go, designed for local development and deployment using <strong>Docker Compose</strong> and <strong>Kubernetes (Minikube)</strong>. It includes authentication, account management, transaction tracking, email notifications, and message brokering via RabbitMQ.
 </p>
+
 
 ## Services 
 
 - **`gateway`** : API Gateway, entrypoint for clients
 - **`auth-service`** : register login logout, secure with JWT refresh token rotation
-- **`account-service`** : manage user acccount and balance, deposit, withdraw and transfer between accounts
+- **`account-service`** : manage user acccount, balance, deposit, withdraw and transfer between accounts
 - **`transaction-service`** : the transaction history and status
-- **`mialer-service`** : email cmpt protocol vai Mailhog
+- **`mailer-service`** : SMTP protocol via Mailhog
 - **`postgres`** : sql database with persistance
 - **`redis`** : used for session/token management
 - **`mailhog`** : mail teseting web UI 
@@ -60,7 +61,7 @@ make stop
 - **`API Tesing`** : Postman collection included
 
 ## Kubernetes Setup (Minikube)
-Make sure you ahave Minikube[http://google.com] installed
+Make sure you ahave Minikube(https://github.com/kubernetes/minikube) installed
 
 Start minikube and deploy
 ```
